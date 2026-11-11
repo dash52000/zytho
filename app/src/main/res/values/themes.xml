@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_bg">#2A1F15</color>
+    <color name="zytho_bg">#15110D</color>
+    <style name="Theme.Zytho" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/zytho_bg</item>
+        <item name="android:statusBarColor">@color/zytho_bg</item>
+        <item name="android:navigationBarColor">@color/zytho_bg</item>
+    </style>
+</resources>
