@@ -66,8 +66,15 @@ fun EditScreen(vm: ZythoViewModel, mode: String, onClose: () -> Unit, onSavedTas
     val scope = rememberCoroutineScope()
     var error by remember { mutableStateOf<String?>(null) }
     var pendingPhoto by rememberSaveable { mutableStateOf<String?>(null) }
-    var showBeer by rememberSaveable { mutableStateOf(d.beerId == null || d.name.isBlank()) }
-    var guided by rememberSaveable { mutableStateOf(false) }
+    val editing = d.tastingId != null
+    var showBeer by rememberSaveable { mutableStateOf(editing || d.beerId == null || d.name.isBlank()) }
+    var guided by rememberSaveable {
+        mutableStateOf(
+            d.color.isNotBlank() || d.sweetness != null || d.bitterness != null ||
+                d.body != null || d.fizz != null || d.finish.isNotBlank() ||
+                d.aromas.any { it !in StyleGuide.FAMILY_LABEL.values }
+        )
+    }
     var step by rememberSaveable { mutableIntStateOf(0) }
 
     val takePhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
@@ -76,7 +83,7 @@ fun EditScreen(vm: ZythoViewModel, mode: String, onClose: () -> Unit, onSavedTas
     }
 
     val title = when (mode) {
-        "tasting" -> "Dégustation"
+        "tasting" -> if (editing) "Modifier la dégustation" else "Dégustation"
         "cellar" -> "Ajout en cave"
         "wish" -> "Wishlist"
         else -> "Fiche bière"
@@ -122,6 +129,7 @@ fun EditScreen(vm: ZythoViewModel, mode: String, onClose: () -> Unit, onSavedTas
                 }
                 TextButton(onClick = { showBeer = !showBeer }) { Text(if (showBeer) "Masquer" else "Modifier") }
             }
+            if (editing && d.source.isNotBlank()) Hint(d.source)
             if (showBeer || mode == "beer") {
                 BeerFields(
                     d = d,

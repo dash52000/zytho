@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,7 +38,7 @@ import fr.damien.zytho.ZythoViewModel
 import fr.damien.zytho.data.Beers
 
 @Composable
-fun JournalScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit) {
+fun JournalScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onMap: () -> Unit) {
     val beers by vm.beers.collectAsState()
     val breweries by vm.breweries.collectAsState()
     val tastings by vm.tastings.collectAsState()
@@ -68,11 +70,13 @@ fun JournalScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit) {
     }
 
     Column(Modifier.fillMaxSize()) {
-        Text(
-            "Carnet",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 8.dp),
+        ) {
+            Text("Carnet", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            IconButton(onClick = onMap) { Icon(Icons.Filled.Map, contentDescription = "Carte des brasseries", tint = Amber) }
+        }
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },

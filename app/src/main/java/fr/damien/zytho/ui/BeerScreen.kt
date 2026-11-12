@@ -51,6 +51,7 @@ fun BeerScreen(
     onAction: (String) -> Unit,
     onStyle: (Int) -> Unit,
     onSouvenir: (Long) -> Unit,
+    onEditTasting: (Long) -> Unit,
 ) {
     val beers by vm.beers.collectAsState()
     val breweries by vm.breweries.collectAsState()
@@ -187,8 +188,13 @@ fun BeerScreen(
                             }
                             if (t.comment.isNotBlank()) Text(t.comment, style = MaterialTheme.typography.bodyMedium)
                         }
-                        IconButton(onClick = { tastingToDelete = t }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column {
+                            IconButton(onClick = { onEditTasting(t.id) }) {
+                                Icon(Icons.Filled.Edit, contentDescription = "Modifier", tint = Amber)
+                            }
+                            IconButton(onClick = { tastingToDelete = t }) {
+                                Icon(Icons.Filled.Delete, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     }
                 }

@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +57,7 @@ fun SouvenirScreen(
     onClose: () -> Unit,
     onBeer: (Long) -> Unit,
     onStyle: (Int) -> Unit,
+    onEdit: (Long) -> Unit,
 ) {
     val tastings by vm.tastings.collectAsState()
     val beers by vm.beers.collectAsState()
@@ -69,6 +71,11 @@ fun SouvenirScreen(
                 title = { Text("Fiche souvenir") },
                 navigationIcon = {
                     IconButton(onClick = onClose) { Icon(Icons.Filled.Close, contentDescription = "Fermer") }
+                },
+                actions = {
+                    if (t != null) {
+                        IconButton(onClick = { onEdit(t.id) }) { Icon(Icons.Filled.Edit, contentDescription = "Modifier") }
+                    }
                 },
             )
         },
@@ -166,13 +173,14 @@ fun SouvenirScreen(
             AnselmeBubble(Anselme.feedback(t, style, beer.name))
 
             Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (style != null) {
                     FilledTonalButton(onClick = { onStyle(StyleGuide.indexOf(style.name)) }) {
                         Text("${style.emoji} Fiche ${style.name}")
                     }
                 }
                 FilledTonalButton(onClick = { onBeer(beer.id) }) { Text("La bière") }
+                FilledTonalButton(onClick = { onEdit(t.id) }) { Text("Modifier") }
             }
             Button(onClick = onClose, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) { Text("Santé !") }
         }

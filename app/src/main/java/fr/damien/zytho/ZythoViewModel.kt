@@ -20,7 +20,9 @@ import fr.damien.zytho.data.Beer
 import fr.damien.zytho.data.Beers
 import fr.damien.zytho.data.Brewery
 import fr.damien.zytho.data.CellarItem
+import fr.damien.zytho.data.Geocoder
 import fr.damien.zytho.data.OpenFoodFacts
+import fr.damien.zytho.data.Place
 import fr.damien.zytho.data.Tasting
 import fr.damien.zytho.data.WishItem
 import fr.damien.zytho.data.ZythoDb
@@ -42,6 +44,8 @@ import kotlin.coroutines.resumeWithException
 
 /** Brouillon partagé entre le scan, le choix d'action et le formulaire. */
 data class Draft(
+    /** Renseigné quand on modifie une dégustation existante */
+    val tastingId: Long? = null,
     val beerId: Long? = null,
     val name: String = "",
     val breweryName: String = "",
@@ -135,7 +139,50 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
             abv = Beers.fmtAbv(beer.abv),
             photoPath = beer.photoPath,
             rebuy = beer.rebuy,
+            trappist = brewery?.trappist ?: false,
         )
+    }
+
+    /** Charge une dégustation existante pour la modifier (bière, brasserie, arômes, tout). */
+    suspend fun prepareEditTasting(tastingId: Long) {
+        val t = dao.tasting(tastingId) ?: return
+        val base = draftForBeer(t.beerId)
+        draft = base.copy(
+            tastingId = t.id,
+            rating = t.rating.toFloat(),
+            aromas = t.aromas.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet(),
+            place = t.place.ifBlank { base.place },
+            service = t.service.ifBlank { base.service },
+            vintage = t.vintage?.toString().orEmpty(),
+            format = t.format.ifBlank { base.format },
+            comment = t.comment,
+            color = t.color.orEmpty(),
+            sweetness = t.sweetness,
+            bitterness = t.bitterness,
+            body = t.body,
+            fizz = t.fizz,
+            finish = t.finish.orEmpty(),
+            source = "Modification de la dégustation du ${java.time.Instant.ofEpochMilli(t.date).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
+        )
+    }
+
+    // ---------- Parcours ----------
+
+    private val prefs = app.getSharedPreferences("zytho", android.content.Context.MODE_PRIVATE)
+    var parcoursStart by mutableStateOf(prefs.getString("parcours_start", "Tripel") ?: "Tripel")
+        private set
+
+    fun changeParcoursStart(style: String) {
+        parcoursStart = style
+        prefs.edit().putString("parcours_start", style).apply()
+    }
+
+    // ---------- Carte des brasseries ----------
+
+    suspend fun searchPlaces(query: String): List<Place> = Geocoder.search(query)
+
+    fun setBreweryLocation(b: Brewery, lat: Double?, lon: Double?) = viewModelScope.launch {
+        dao.updateBrewery(b.copy(lat = lat, lon = lon))
     }
 
     suspend fun prepareForBeer(beerId: Long, vintage: Int? = null, format: String? = null) {
@@ -289,10 +336,12 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
 
         when (mode) {
             "tasting" -> {
-                lastTastingId = dao.insertTasting(
+                val existing = d.tastingId?.let { dao.tasting(it) }
+                val tasting =
                     Tasting(
+                        id = existing?.id ?: 0,
                         beerId = beerId,
-                        date = now,
+                        date = existing?.date ?: now,
                         rating = d.rating.toDouble(),
                         aromas = d.aromas.sorted().joinToString(", "),
                         place = d.place,
@@ -307,7 +356,12 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
                         fizz = d.fizz,
                         finish = d.finish.ifBlank { null },
                     )
-                )
+                lastTastingId = if (existing != null) {
+                    dao.updateTasting(tasting)
+                    existing.id
+                } else {
+                    dao.insertTasting(tasting)
+                }
             }
             "cellar" -> {
                 val vintage = d.vintage.trim().toIntOrNull()

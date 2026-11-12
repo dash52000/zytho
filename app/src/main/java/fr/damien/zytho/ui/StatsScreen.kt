@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -31,7 +32,7 @@ import fr.damien.zytho.data.Anselme
 import fr.damien.zytho.data.Beers
 
 @Composable
-fun StatsScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onSettings: () -> Unit) {
+fun StatsScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onSettings: () -> Unit, onMap: () -> Unit) {
     val beers by vm.beers.collectAsState()
     val breweries by vm.breweries.collectAsState()
     val tastings by vm.tastings.collectAsState()
@@ -50,6 +51,7 @@ fun StatsScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onSettings: () -> Un
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
             Text("Palais", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            IconButton(onClick = onMap) { Icon(Icons.Filled.Map, contentDescription = "Carte des brasseries", tint = Amber) }
             IconButton(onClick = onSettings) { Icon(Icons.Filled.Settings, contentDescription = "Réglages et export") }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {

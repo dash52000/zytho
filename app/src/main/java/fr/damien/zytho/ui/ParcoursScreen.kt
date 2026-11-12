@@ -3,6 +3,12 @@
 package fr.damien.zytho.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -41,7 +47,9 @@ fun ParcoursScreen(vm: ZythoViewModel, onStyle: (Int) -> Unit, onScan: () -> Uni
     val beers by vm.beers.collectAsState()
     val tastings by vm.tastings.collectAsState()
     val done = Parcours.done(beers, tastings)
-    val next = Parcours.next(beers, tastings)
+    val start = vm.parcoursStart
+    val next = Parcours.next(beers, tastings, start)
+    var chooseStart by remember { mutableStateOf(false) }
     val total = StyleGuide.ALL.count { it.name != "Autre" }
     val doneNames = done.map { it.first.name }.toSet()
 
@@ -58,6 +66,31 @@ fun ParcoursScreen(vm: ZythoViewModel, onStyle: (Int) -> Unit, onScan: () -> Uni
                 else -> "Tu as déjà exploré ${done.size} style(s) sur $total. Chaque dégustation affine ma connaissance de ton palais."
             }
         )
+
+        val startInfo = StyleGuide.of(start)
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 10.dp)) {
+            Text("Point de départ :", style = MaterialTheme.typography.bodyMedium)
+            Spacer(Modifier.width(8.dp))
+            Box {
+                FilterChip(
+                    selected = true,
+                    onClick = { chooseStart = true },
+                    label = { Text("${startInfo?.emoji ?: ""} $start ▾") },
+                )
+                DropdownMenu(expanded = chooseStart, onDismissRequest = { chooseStart = false }) {
+                    Parcours.STARTS.forEach { name ->
+                        val s = StyleGuide.of(name)
+                        DropdownMenuItem(
+                            text = { Text("${s?.emoji ?: ""} $name") },
+                            onClick = {
+                                vm.changeParcoursStart(name)
+                                chooseStart = false
+                            },
+                        )
+                    }
+                }
+            }
+        }
 
         Spacer(Modifier.height(10.dp))
         LinearProgressIndicator(

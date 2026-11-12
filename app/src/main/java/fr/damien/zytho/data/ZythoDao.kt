@@ -67,7 +67,11 @@ interface ZythoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertBarcode(b: Barcode)
 
     @Insert suspend fun insertTasting(t: Tasting): Long
+    @Update suspend fun updateTasting(t: Tasting)
     @Delete suspend fun deleteTasting(t: Tasting)
+
+    @Query("SELECT * FROM tasting WHERE id = :id LIMIT 1")
+    suspend fun tasting(id: Long): Tasting?
 
     @Insert suspend fun insertCellar(c: CellarItem): Long
     @Update suspend fun updateCellar(c: CellarItem)

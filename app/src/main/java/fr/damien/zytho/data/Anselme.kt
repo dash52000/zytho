@@ -165,11 +165,15 @@ object Parcours {
             .sortedBy { it.second }
     }
 
-    fun next(beers: List<Beer>, tastings: List<Tasting>): ParcoursStep? {
+    /** Styles proposés comme point de départ. */
+    val STARTS: List<String> = StyleGuide.ALL.map { it.name }.filter { it != "Autre" }
+
+    fun next(beers: List<Beer>, tastings: List<Tasting>, start: String = "Tripel"): ParcoursStep? {
         val doneNames = done(beers, tastings).map { it.first.name }.toSet()
-        START.firstOrNull { it !in doneNames }?.let { name ->
-            val s = StyleGuide.of(name) ?: return null
-            return ParcoursStep(s, "Étape de départ : je fais connaissance avec ton palais.")
+        if (start !in doneNames) {
+            StyleGuide.of(start)?.let {
+                return ParcoursStep(it, "Ton point de départ : c'est avec elle que je fais connaissance avec ton palais.")
+            }
         }
         val styleById = beers.associate { it.id to it.style }
         val avgByStyle = tastings
@@ -183,7 +187,8 @@ object Parcours {
             val s = StyleGuide.of(candidate) ?: continue
             return ParcoursStep(s, "Parce que tu as aimé la $style (${Beers.fmtNote(Math.round(avg * 10) / 10.0)}/10).")
         }
-        val rest = StyleGuide.ALL.firstOrNull { it.name != "Autre" && it.name !in doneNames } ?: return null
+        val order = START + StyleGuide.ALL.map { it.name }.filter { it !in START && it != "Autre" }
+        val rest = order.firstOrNull { it !in doneNames }?.let { StyleGuide.of(it) } ?: return null
         return ParcoursStep(rest, "Pour élargir ton horizon.")
     }
 }

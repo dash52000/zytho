@@ -89,6 +89,12 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
     }
 
     fun openBeer(id: Long) = nav.navigate("beer/$id")
+    fun editTasting(tastingId: Long) {
+        scope.launch {
+            vm.prepareEditTasting(tastingId)
+            nav.navigate("edit/tasting")
+        }
+    }
     fun openStyle(index: Int) {
         if (index >= 0) nav.navigate("style/$index")
     }
@@ -127,7 +133,7 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
     ) { pad ->
         Box(Modifier.padding(pad).fillMaxSize()) {
             NavHost(nav, startDestination = "journal") {
-                composable("journal") { JournalScreen(vm, onBeer = ::openBeer) }
+                composable("journal") { JournalScreen(vm, onBeer = ::openBeer, onMap = { nav.navigate("map") }) }
                 composable("cave") {
                     CaveScreen(
                         vm,
@@ -149,7 +155,10 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
                 composable("parcours") {
                     ParcoursScreen(vm, onStyle = ::openStyle, onScan = { nav.navigate("scan") })
                 }
-                composable("palais") { StatsScreen(vm, onBeer = ::openBeer, onSettings = { nav.navigate("settings") }) }
+                composable("palais") {
+                    StatsScreen(vm, onBeer = ::openBeer, onSettings = { nav.navigate("settings") }, onMap = { nav.navigate("map") })
+                }
+                composable("map") { MapScreen(vm, onBack = { nav.popBackStack() }) }
                 composable(
                     "beer/{id}",
                     arguments = listOf(navArgument("id") { type = NavType.LongType }),
@@ -166,6 +175,7 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
                         },
                         onStyle = ::openStyle,
                         onSouvenir = { tid -> nav.navigate("souvenir/$tid") },
+                        onEditTasting = ::editTasting,
                     )
                 }
                 composable("scan") {
@@ -208,6 +218,12 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
                         onClose = { nav.popBackStack() },
                         onBeer = { bid -> nav.navigate("beer/$bid") { popUpTo("souvenir/{id}") { inclusive = true } } },
                         onStyle = ::openStyle,
+                        onEdit = { tid ->
+                            scope.launch {
+                                vm.prepareEditTasting(tid)
+                                nav.navigate("edit/tasting") { popUpTo("souvenir/{id}") { inclusive = true } }
+                            }
+                        },
                     )
                 }
                 composable(

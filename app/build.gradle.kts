@@ -17,7 +17,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = buildNumber
-        versionName = "1.1.$buildNumber"
+        versionName = "1.2.$buildNumber"
     }
 
     signingConfigs {
@@ -83,5 +83,6 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.1")
 
     implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 }
