@@ -33,6 +33,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -52,6 +53,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import fr.damien.zytho.Draft
 import fr.damien.zytho.ZythoViewModel
+import fr.damien.zytho.data.Candidate
+import fr.damien.zytho.data.Catalog
 import fr.damien.zytho.data.Anselme
 import fr.damien.zytho.data.Beers
 import fr.damien.zytho.data.StyleGuide
@@ -131,9 +134,13 @@ fun EditScreen(vm: ZythoViewModel, mode: String, onClose: () -> Unit, onSavedTas
             }
             if (editing && d.source.isNotBlank()) Hint(d.source)
             if (showBeer || mode == "beer") {
+                val suggestions = if (d.beerId != null) emptyList() else
+                    Catalog.search(vm.catalog, d.name).filter { it.key != Catalog.normalize(d.name) }
                 BeerFields(
                     d = d,
                     error = err,
+                    suggestions = suggestions,
+                    onPick = { c -> d = vm.fillFromCandidate(d, c); error = null },
                     onChange = { d = it; error = null },
                     onPhoto = {
                         val (uri, path) = vm.newPhoto()
@@ -193,7 +200,14 @@ fun EditScreen(vm: ZythoViewModel, mode: String, onClose: () -> Unit, onSavedTas
 }
 
 @Composable
-private fun BeerFields(d: Draft, error: String?, onChange: (Draft) -> Unit, onPhoto: () -> Unit) {
+private fun BeerFields(
+    d: Draft,
+    error: String?,
+    suggestions: List<Candidate>,
+    onPick: (Candidate) -> Unit,
+    onChange: (Draft) -> Unit,
+    onPhoto: () -> Unit,
+) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
         OutlinedButton(onClick = onPhoto) {
             Icon(Icons.Filled.PhotoCamera, contentDescription = null)
@@ -208,6 +222,19 @@ private fun BeerFields(d: Draft, error: String?, onChange: (Draft) -> Unit, onPh
         supportingText = if (error != null) { { Text(error) } } else null,
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
     )
+    suggestions.forEach { c ->
+        SuggestionChip(
+            onClick = { onPick(c) },
+            label = {
+                Text(
+                    listOfNotNull(c.name, c.brewery.ifBlank { null }, Beers.fmtAbv(c.abv).ifBlank { null }?.let { "$it %" })
+                        .joinToString(" · "),
+                    maxLines = 1,
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = d.breweryName, onValueChange = { onChange(d.copy(breweryName = it)) },

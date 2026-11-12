@@ -32,6 +32,9 @@ interface ZythoDao {
     @Query("SELECT * FROM aroma ORDER BY family, label")
     fun aromas(): Flow<List<Aroma>>
 
+    @Query("SELECT * FROM catalog_exclusion")
+    fun exclusions(): Flow<List<CatalogExclusion>>
+
     // Lectures ponctuelles
     @Query("SELECT * FROM brewery") suspend fun allBreweries(): List<Brewery>
     @Query("SELECT * FROM beer") suspend fun allBeers(): List<Beer>
@@ -40,6 +43,7 @@ interface ZythoDao {
     @Query("SELECT * FROM cellar") suspend fun allCellar(): List<CellarItem>
     @Query("SELECT * FROM wish") suspend fun allWishes(): List<WishItem>
     @Query("SELECT * FROM aroma") suspend fun allAromas(): List<Aroma>
+    @Query("SELECT * FROM catalog_exclusion") suspend fun allExclusions(): List<CatalogExclusion>
 
     @Query("SELECT * FROM barcode WHERE code = :code LIMIT 1")
     suspend fun barcode(code: String): Barcode?
@@ -79,6 +83,10 @@ interface ZythoDao {
 
     @Insert suspend fun insertWish(w: WishItem): Long
     @Delete suspend fun deleteWish(w: WishItem)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertExclusion(e: CatalogExclusion)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertExclusions(l: List<CatalogExclusion>)
+    @Query("DELETE FROM catalog_exclusion") suspend fun clearExclusions()
 
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insertAromas(list: List<Aroma>)
 

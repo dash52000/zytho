@@ -15,6 +15,10 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import fr.damien.zytho.data.Beer
 import fr.damien.zytho.data.StyleGuide
@@ -36,6 +40,15 @@ fun tastePoints(beers: List<Beer>, tastings: List<Tasting>): List<TastePoint> {
     }
 }
 
+/** Un repère posé sur la carte (conseil d'Anselme). */
+data class MapMark(val x: Float, val y: Float, val emoji: String)
+
+/** Petit décalage stable pour que deux bières au même profil ne se recouvrent pas. */
+fun spread(key: String): Pair<Float, Float> {
+    val h = key.hashCode()
+    return ((h % 13) / 30f) to (((h / 13) % 13) / 30f)
+}
+
 /** Centre de gravité des bières aimées (note ≥ 7), ou null. */
 fun palateCenter(points: List<TastePoint>): Pair<Float, Float>? {
     val liked = points.filter { it.rating >= 7 }
@@ -44,7 +57,13 @@ fun palateCenter(points: List<TastePoint>): Pair<Float, Float>? {
 }
 
 @Composable
-fun TasteMap(points: List<TastePoint>, center: Pair<Float, Float>?) {
+fun TasteMap(
+    points: List<TastePoint>,
+    center: Pair<Float, Float>?,
+    ghosts: List<Pair<Float, Float>> = emptyList(),
+    marks: List<MapMark> = emptyList(),
+) {
+    val measurer = rememberTextMeasurer()
     val bg = MaterialTheme.colorScheme.surfaceVariant
     val grid = MaterialTheme.colorScheme.outlineVariant
     Box(Modifier.fillMaxWidth().height(260.dp)) {
@@ -57,6 +76,9 @@ fun TasteMap(points: List<TastePoint>, center: Pair<Float, Float>?) {
             fun py(y: Float) = h - pad - (y.coerceIn(-0.5f, 4.5f) + 0.5f) / 5f * (h - 2 * pad)
             drawLine(grid, Offset(px(0f), pad / 2), Offset(px(0f), h - pad / 2), strokeWidth = 2f)
             drawLine(grid, Offset(pad / 2, py(2f)), Offset(w - pad / 2, py(2f)), strokeWidth = 2f)
+            ghosts.forEach { (gx, gy) ->
+                drawCircle(Color(0xFFF3E6CF).copy(alpha = 0.22f), radius = 3.dp.toPx(), center = Offset(px(gx), py(gy)))
+            }
             points.forEach { p ->
                 val c = when {
                     p.rating >= 8 -> Color(0xFFE0A030)
@@ -70,6 +92,16 @@ fun TasteMap(points: List<TastePoint>, center: Pair<Float, Float>?) {
                 val o = Offset(px(center.first), py(center.second))
                 drawCircle(Color(0xFFF3E6CF), radius = 18.dp.toPx(), center = o, style = Stroke(width = 3.dp.toPx()))
                 drawCircle(Color(0xFFF3E6CF), radius = 3.dp.toPx(), center = o)
+            }
+            marks.forEach { m ->
+                val layout = measurer.measure(m.emoji, TextStyle(fontSize = 18.sp))
+                drawText(
+                    layout,
+                    topLeft = Offset(
+                        px(m.x) - layout.size.width / 2f,
+                        py(m.y) - layout.size.height / 2f,
+                    ),
+                )
             }
         }
         val label = MaterialTheme.typography.labelSmall

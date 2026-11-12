@@ -92,6 +92,15 @@ data class Aroma(
     val custom: Boolean = false,
 )
 
+/** Bière du catalogue qu'Anselme ne doit plus proposer (« Pas pour moi »). */
+@Serializable
+@Entity(tableName = "catalog_exclusion")
+data class CatalogExclusion(
+    /** Clé normalisée du nom (Catalog.normalize) */
+    @PrimaryKey val name: String,
+    val addedAt: Long = 0,
+)
+
 @Serializable
 data class Backup(
     val version: Int = 1,
@@ -102,4 +111,5 @@ data class Backup(
     val cellar: List<CellarItem> = emptyList(),
     val wishes: List<WishItem> = emptyList(),
     val aromas: List<Aroma> = emptyList(),
+    val exclusions: List<CatalogExclusion> = emptyList(),
 )

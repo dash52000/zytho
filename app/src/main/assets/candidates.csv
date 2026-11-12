@@ -1,0 +1,94 @@
+nom,brasserie,pays,region,style,degre,ibu,douceur,amertume,corps,disponibilite,trappiste,ajustement,verif,source
+Orval,Brasserie d'Orval,Belgique,Gaume,Autre,6.2,,0,3,1,locale,oui,très sèche; houblonnée; brett qui assèche avec l'âge,connu,
+Orval Vert,Brasserie d'Orval,Belgique,Gaume,Autre,4.5,,0,3,1,rare,oui,petite Orval servie surtout à l'Ange Gardien,connu,
+La Rulles Blonde,Brasserie de Rulles,Belgique,Gaume,Blonde,7.0,30,1,2,2,locale,non,IBU 30 au-dessus d'une blonde typique,web,https://food.be/sites/food/files/companies/0012000000RYXuwAAH/01257000000VEN0AAO/brochureA4printFREN.pdf
+La Rulles Brune,Brasserie de Rulles,Belgique,Gaume,Brune,6.5,31,2,2,2,locale,non,degré modéré donc corps moyen,web,https://food.be/sites/food/files/companies/0012000000RYXuwAAH/01257000000VEN0AAO/brochureA4printFREN.pdf
+La Rulles Triple,Brasserie de Rulles,Belgique,Gaume,Tripel,8.4,39,1,3,3,locale,non,amère et chaleureuse selon les fiches,web,https://food.be/sites/food/files/companies/0012000000RYXuwAAH/01257000000VEN0AAO/brochureA4printFREN.pdf
+La Rulles Estivale,Brasserie de Rulles,Belgique,Gaume,Blonde,5.2,43,0,3,1,locale,non,blonde d'été très houblonnée (pamplemousse),web,https://food.be/sites/food/files/companies/0012000000RYXuwAAH/01257000000VEN0AAO/brochureA4printFREN.pdf
+La Rulles La Grande 10,Brasserie de Rulles,Belgique,Gaume,Strong Golden Ale,10.0,46,1,3,3,locale,non,10 % mais finale amère; miel brûlé,web,https://birrapedia.com/en/la-rulles-la-grande-10/p-be/f-576a9d4e1603dae57c849390
+La Rulles Cuvée Meilleurs Vœux,Brasserie de Rulles,Belgique,Gaume,Brune,7.3,35,2,2,3,locale,non,bière d'hiver épicée; saisonnière,web,https://food.be/sites/food/files/companies/0012000000RYXuwAAH/01257000000VEN0AAO/brochureA4printFREN.pdf
+La Mère Vertus,Millevertus (Domaine Brassicole de l'Eau Vive),Belgique,Gaume,Tripel,9.0,,2,2,3,locale,non,triple maltée et houblonnée,web,https://beercrush.eu/en/collections/bieres-brasserie-millevertus
+Fumette,Millevertus (Domaine Brassicole de l'Eau Vive),Belgique,Gaume,Ambrée,6.5,,2,2,2,locale,non,ambrée fumée: repère inhabituel sur la carte,web,https://beercrush.eu/en/collections/bieres-brasserie-millevertus
+Blanchette de Gaume,Millevertus (Domaine Brassicole de l'Eau Vive),Belgique,Gaume,Witbier,5.0,,1,1,1,locale,non,blanche épicée classique,web,https://beercrush.eu/en/collections/bieres-brasserie-millevertus
+IPApotame,Millevertus (Domaine Brassicole de l'Eau Vive),Belgique,Gaume,IPA,6.0,,1,3,2,locale,non,IPA à la belge; IBU non publié,web,https://beercrush.eu/en/collections/bieres-brasserie-millevertus
+Gypsy Rose,Brasserie Sainte-Hélène,Belgique,Gaume,Tripel,9.0,,1,2,3,locale,non,9 %: corps plus rond qu'une tripel moyenne,web,https://www.beermenus.com/breweries/4705-brasserie-sainte-h-l-ne
+La Grognarde,Brasserie Sainte-Hélène,Belgique,Gaume,IPA,5.5,,1,3,1,locale,non,pale ale anglaise au Brewers Gold,web,https://www.beermenus.com/breweries/4705-brasserie-sainte-h-l-ne
+Mistinguett,Brasserie Sainte-Hélène,Belgique,Gaume,Blonde,6.5,,2,1,2,locale,non,blonde rafraîchissante,web,https://www.lapassionduvin.com/la-biere/48086-brasserie-saint-helene-belgique
+Lily Blue,Brasserie Sainte-Hélène,Belgique,Gaume,Brune,7.5,,2,2,3,locale,non,brune généreuse,web,https://www.beertasting.com/en/beers/sainte-helene-lily-blue
+Black Mamba,Brasserie Sainte-Hélène,Belgique,Gaume,Stout,4.5,,1,3,2,locale,non,stout léger houblonné Citra et Simcoe,web,https://www.beermenus.com/breweries/4705-brasserie-sainte-h-l-ne
+La Recevresse Imperial Stout,Brasserie des Trévires,Belgique,Gaume,Stout,11.0,,2,3,4,locale,non,ronde et soyeuse; notes de cognac,damien,degré corrigé par Damien (11 %)
+Loroyse,Les Brasseurs de Lorraine,France,Lorraine,Tripel,8.0,,1,2,2,locale,non,ancrage style,web,https://tourisme-meurtheetmoselle.fr/en/accueil/lessentiel/gastronomie/et-pour-accompagner/1284000080-les-brasseurs-de-lorraine
+Abbaye des Prémontrés,Les Brasseurs de Lorraine,France,Lorraine,Dubbel,6.0,,3,1,2,locale,non,6 % donc corps plus léger qu'une dubbel; notes caramel,web,https://tourisme-meurtheetmoselle.fr/en/accueil/lessentiel/gastronomie/et-pour-accompagner/1284000080-les-brasseurs-de-lorraine
+Duchesse de Lorraine,Les Brasseurs de Lorraine,France,Lorraine,Ambrée,6.0,,2,1,2,locale,non,rouge aromatisée,web,https://tourisme-meurtheetmoselle.fr/en/accueil/lessentiel/gastronomie/et-pour-accompagner/1284000080-les-brasseurs-de-lorraine
+Bière de Saint-Nicolas,Les Brasseurs de Lorraine,France,Lorraine,Ambrée,4.5,,2,1,1,locale,non,saisonnière de décembre,web,https://tourisme-meurtheetmoselle.fr/en/accueil/lessentiel/gastronomie/et-pour-accompagner/1284000080-les-brasseurs-de-lorraine
+La Châouette Ambrée,Brasserie La Châouette,France,Lorraine,Ambrée,,,2,2,2,locale,non,malts caramel et café,a_confirmer,https://www.carrefour.fr/p/biere-ambree-bio-de-lorraine-chaouette-3760266060053
+La Châouette Blanche,Brasserie La Châouette,France,Lorraine,Witbier,,,1,1,1,locale,non,ancrage style,a_confirmer,https://tourisme-meurtheetmoselle.fr/en/accueil/lessentiel/gastronomie/et-pour-accompagner/751000170-brasserie-artisanale-la-chaouette
+Simon Dinkel,Brasserie Simon,Luxembourg,Luxembourg,Autre,4.5,23,1,2,1,locale,non,bière d'épeautre de basse fermentation,web,https://www.beertasting.com/en/beers/dinkel-910
+Okult Triple,Brasserie Simon,Luxembourg,Luxembourg,Tripel,7.0,,1,2,2,locale,non,ancrage style,a_confirmer,https://www.beertasting.com/en/beers/simon-okult-triple
+Westmalle Dubbel,Brouwerij der Trappisten van Westmalle,Belgique,Anvers,Dubbel,7.0,,2,2,3,courante,oui,plus sèche que la dubbel moyenne,connu,
+Westmalle Tripel,Brouwerij der Trappisten van Westmalle,Belgique,Anvers,Tripel,9.5,,1,3,3,courante,oui,la tripel de référence; sèche et amère,connu,
+Westmalle Extra,Brouwerij der Trappisten van Westmalle,Belgique,Anvers,Blonde,4.8,,1,2,1,rare,oui,bière des moines; rarement vendue,connu,
+Rochefort 6,Brasserie de Rochefort,Belgique,Namur,Dubbel,7.5,,3,1,3,courante,oui,ancrage style,connu,
+Rochefort 8,Brasserie de Rochefort,Belgique,Namur,Quadrupel,9.2,,3,1,3,courante,oui,un cran sous la 10,connu,
+Rochefort 10,Brasserie de Rochefort,Belgique,Namur,Quadrupel,11.3,,3,1,4,courante,oui,quad de référence; se garde très bien,connu,
+Rochefort Triple Extra,Brasserie de Rochefort,Belgique,Namur,Tripel,8.1,,1,3,2,courante,oui,tripel sèche et houblonnée,connu,
+Chimay Rouge,Bières de Chimay,Belgique,Hainaut,Dubbel,7.0,,3,1,3,courante,oui,ancrage style,connu,
+Chimay Bleue,Bières de Chimay,Belgique,Hainaut,Quadrupel,9.0,,3,1,4,courante,oui,grande réserve; se garde,connu,
+Chimay Triple,Bières de Chimay,Belgique,Hainaut,Tripel,8.0,,1,3,2,courante,oui,la plus houblonnée des Chimay,connu,
+Chimay Dorée,Bières de Chimay,Belgique,Hainaut,Blonde,4.8,,2,1,1,courante,oui,blonde légère des moines,connu,
+Westvleteren 12,Brouwerij Westvleteren (Sint-Sixtus),Belgique,Flandre occidentale,Quadrupel,10.2,,3,1,4,rare,oui,vente quasi uniquement à l'abbaye,connu,
+Westvleteren 8,Brouwerij Westvleteren (Sint-Sixtus),Belgique,Flandre occidentale,Dubbel,8.0,,3,1,3,rare,oui,vente quasi uniquement à l'abbaye,connu,
+Westvleteren Blond,Brouwerij Westvleteren (Sint-Sixtus),Belgique,Flandre occidentale,Blonde,5.8,,1,3,1,rare,oui,blonde très houblonnée,connu,
+La Trappe Quadrupel,Bierbrouwerij De Koningshoeven,Pays-Bas,Brabant-Septentrional,Quadrupel,10.0,,3,1,4,courante,oui,ancrage style,connu,
+La Trappe Tripel,Bierbrouwerij De Koningshoeven,Pays-Bas,Brabant-Septentrional,Tripel,8.0,,2,1,2,courante,oui,tripel plus douce,connu,
+Leffe Blonde,AB InBev (Leffe),Belgique,Namur,Blonde,6.6,,3,1,2,courante,non,blonde d'abbaye sucrée,connu,
+Leffe Brune,AB InBev (Leffe),Belgique,Namur,Brune,6.5,,3,1,2,courante,non,brune ronde et sucrée,connu,
+Leffe Triple,AB InBev (Leffe),Belgique,Namur,Tripel,8.5,,2,1,2,courante,non,tripel douce,connu,
+Grimbergen Blonde,Brasserie Alken-Maes (Grimbergen),Belgique,Brabant flamand,Blonde,6.7,,3,1,2,courante,non,blonde d'abbaye sucrée,connu,
+Grimbergen Double,Brasserie Alken-Maes (Grimbergen),Belgique,Brabant flamand,Dubbel,6.5,,3,1,2,courante,non,6.5 % donc corps moyen,connu,
+Grimbergen Triple,Brasserie Alken-Maes (Grimbergen),Belgique,Brabant flamand,Tripel,8.0,,2,1,2,courante,non,tripel douce,connu,
+Affligem Blonde,Brouwerij Affligem,Belgique,Brabant flamand,Blonde,6.8,,2,1,2,courante,non,ancrage style,connu,
+Affligem Dubbel,Brouwerij Affligem,Belgique,Brabant flamand,Dubbel,6.8,,3,1,3,courante,non,ancrage style,connu,
+Affligem Tripel,Brouwerij Affligem,Belgique,Brabant flamand,Tripel,8.5,,2,2,2,courante,non,fruits confits et pointe d'amertume,web,https://www.auchan.fr/affligem-biere-blonde-triple-belge-d-abbaye-8-5-bouteilles/pr-C1208034
+Maredsous Blonde,Duvel Moortgat (Maredsous),Belgique,Namur,Blonde,6.0,,2,1,2,courante,non,ancrage style,connu,
+Maredsous Brune,Duvel Moortgat (Maredsous),Belgique,Namur,Dubbel,8.0,,3,1,3,courante,non,ancrage style,connu,
+Maredsous Triple,Duvel Moortgat (Maredsous),Belgique,Namur,Tripel,10.0,,2,2,3,courante,non,10 %: plus de corps,connu,
+St. Bernardus Abt 12,Brouwerij St. Bernardus,Belgique,Flandre occidentale,Quadrupel,10.0,,3,1,4,courante,non,la quad d'inspiration Westvleteren,connu,
+St. Bernardus Prior 8,Brouwerij St. Bernardus,Belgique,Flandre occidentale,Dubbel,8.0,,3,1,3,courante,non,ancrage style,connu,
+St. Bernardus Pater 6,Brouwerij St. Bernardus,Belgique,Flandre occidentale,Dubbel,6.7,,3,1,2,courante,non,dubbel plus légère,connu,
+St. Bernardus Tripel,Brouwerij St. Bernardus,Belgique,Flandre occidentale,Tripel,8.0,,1,2,2,courante,non,ancrage style,connu,
+Tripel Karmeliet,Brouwerij Bosteels,Belgique,Flandre orientale,Tripel,8.4,,2,1,3,courante,non,trois céréales; crémeuse et ronde,connu,
+St-Feuillien Triple,Brasserie St-Feuillien,Belgique,Hainaut,Tripel,8.5,,1,2,2,courante,non,ancrage style,connu,
+Duvel,Duvel Moortgat,Belgique,Anvers,Strong Golden Ale,8.5,,0,3,1,courante,non,la référence du style; très sèche,connu,
+Delirium Tremens,Brouwerij Huyghe,Belgique,Flandre orientale,Strong Golden Ale,8.5,,2,1,2,courante,non,plus fruitée et sucrée que Duvel,connu,
+Piraat,Brouwerij Van Steenberge,Belgique,Flandre orientale,Strong Golden Ale,10.5,,2,2,3,courante,non,10.5 %: corps et chaleur,connu,
+Brigand,Brouwerij Van Honsebrouck,Belgique,Flandre occidentale,Strong Golden Ale,9.0,,2,2,2,courante,non,ancrage style ajusté vers le rond,connu,
+La Chouffe,Brasserie d'Achouffe,Belgique,Ardenne,Strong Golden Ale,8.0,,2,1,2,courante,non,épicée et fruitée,connu,
+McChouffe,Brasserie d'Achouffe,Belgique,Ardenne,Scotch,8.0,,3,1,3,courante,non,brune maltée façon scotch ale,connu,
+Houblon Chouffe,Brasserie d'Achouffe,Belgique,Ardenne,IPA,9.0,,1,4,3,courante,non,IPA tripel: amère et corsée,connu,
+Gulden Draak,Brouwerij Van Steenberge,Belgique,Flandre orientale,Quadrupel,10.5,,4,1,4,courante,non,très sucrée et liquoreuse,connu,
+Kwak,Brouwerij Bosteels,Belgique,Flandre orientale,Ambrée,8.4,,3,1,2,courante,non,ambrée sucrée,connu,
+Kasteel Donker,Brouwerij Van Honsebrouck,Belgique,Flandre occidentale,Quadrupel,11.0,,4,1,4,courante,non,très sucrée,connu,
+Gouden Carolus Classic,Brouwerij Het Anker,Belgique,Anvers,Brune,8.5,,3,1,3,courante,non,brune forte maltée,connu,
+Gouden Carolus Cuvée van de Keizer Blauw,Brouwerij Het Anker,Belgique,Anvers,Quadrupel,11.0,,3,1,4,rare,non,brassée une fois par an,connu,
+Bush Ambrée,Brasserie Dubuisson,Belgique,Hainaut,Barley wine,12.0,,3,2,4,courante,non,la plus forte des classiques belges,connu,
+Straffe Hendrik Tripel,Brouwerij De Halve Maan,Belgique,Flandre occidentale,Tripel,9.0,,1,3,2,courante,non,tripel amère,connu,
+Straffe Hendrik Quadrupel,Brouwerij De Halve Maan,Belgique,Flandre occidentale,Quadrupel,11.0,,3,1,4,courante,non,ancrage style,connu,
+Brugse Zot Blond,Brouwerij De Halve Maan,Belgique,Flandre occidentale,Blonde,6.0,,1,2,1,courante,non,blonde sèche,connu,
+Brugse Zot Dubbel,Brouwerij De Halve Maan,Belgique,Flandre occidentale,Dubbel,7.5,,3,1,3,courante,non,ancrage style,connu,
+Cuvée des Trolls,Brasserie Dubuisson,Belgique,Hainaut,Blonde,7.0,,2,1,2,courante,non,blonde fruitée,connu,
+Moinette Blonde,Brasserie Dupont,Belgique,Hainaut,Strong Golden Ale,8.5,,1,3,2,courante,non,levure Dupont: sèche et poivrée,connu,
+Saison Dupont,Brasserie Dupont,Belgique,Hainaut,Saison,6.5,,0,3,1,courante,non,la saison de référence,connu,
+XX Bitter,Brouwerij De Ranke,Belgique,Hainaut,IPA,6.2,,0,4,1,courante,non,une des belges les plus amères,connu,
+Hoegaarden,AB InBev (Hoegaarden),Belgique,Brabant flamand,Witbier,4.9,,2,0,1,courante,non,blanche douce,connu,
+Blanche de Namur,Brasserie du Bocq,Belgique,Namur,Witbier,4.5,,2,0,1,courante,non,blanche douce,connu,
+Oude Geuze Boon,Brouwerij Boon,Belgique,Brabant flamand,Gueuze,7.0,,0,1,1,courante,non,gueuze traditionnelle accessible,connu,
+Oude Geuze 3 Fonteinen,Brouwerij 3 Fonteinen,Belgique,Brabant flamand,Gueuze,6.0,,0,1,1,rare,non,degré variable selon assemblage,connu,
+Cantillon Gueuze,Brasserie Cantillon,Belgique,Bruxelles,Gueuze,5.0,,0,1,1,rare,non,très acide et sèche,connu,
+Cantillon Grand Cru Bruocsella,Brasserie Cantillon,Belgique,Bruxelles,Lambic,5.0,,0,0,1,rare,non,lambic plat de trois ans,connu,
+Oude Kriek Boon,Brouwerij Boon,Belgique,Brabant flamand,Kriek,6.5,,0,0,1,courante,non,kriek traditionnelle non sucrée,connu,
+Lindemans Kriek,Brouwerij Lindemans,Belgique,Brabant flamand,Kriek,3.5,,4,0,1,courante,non,kriek sucrée: l'opposé de la Oude Kriek,connu,
+Rodenbach Grand Cru,Brouwerij Rodenbach,Belgique,Flandre occidentale,Autre,6.0,,2,0,2,courante,non,rouge des Flandres aigre-douce,connu,
+Duchesse de Bourgogne,Brouwerij Verhaeghe,Belgique,Flandre occidentale,Autre,6.2,,3,0,2,courante,non,rouge des Flandres plus sucrée,connu,
+Pannepot,De Struise Brouwers,Belgique,Flandre occidentale,Quadrupel,10.0,,3,1,4,rare,non,quad épicée de petite brasserie,connu,
+Black Albert,De Struise Brouwers,Belgique,Flandre occidentale,Stout,13.0,,3,3,4,rare,non,imperial stout belge très corsé,connu,

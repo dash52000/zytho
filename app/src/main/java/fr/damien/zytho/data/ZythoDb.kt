@@ -10,9 +10,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(
     entities = [
         Brewery::class, Beer::class, Barcode::class, Tasting::class,
-        CellarItem::class, WishItem::class, Aroma::class,
+        CellarItem::class, WishItem::class, Aroma::class, CatalogExclusion::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class ZythoDb : RoomDatabase() {
@@ -34,13 +34,22 @@ abstract class ZythoDb : RoomDatabase() {
             }
         }
 
+        /** v2 -> v3 : bières du catalogue écartées par « Pas pour moi ». */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `catalog_exclusion` (`name` TEXT NOT NULL, `addedAt` INTEGER NOT NULL, PRIMARY KEY(`name`))"
+                )
+            }
+        }
+
         fun get(context: Context): ZythoDb =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     ZythoDb::class.java,
                     "zytho.db",
-                ).addMigrations(MIGRATION_1_2).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
             }
     }
 }

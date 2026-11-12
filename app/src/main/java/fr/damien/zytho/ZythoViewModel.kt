@@ -19,10 +19,18 @@ import fr.damien.zytho.data.Barcode
 import fr.damien.zytho.data.Beer
 import fr.damien.zytho.data.Beers
 import fr.damien.zytho.data.Brewery
+import fr.damien.zytho.data.Candidate
+import fr.damien.zytho.data.Catalog
+import fr.damien.zytho.data.CatalogExclusion
 import fr.damien.zytho.data.CellarItem
 import fr.damien.zytho.data.Geocoder
 import fr.damien.zytho.data.OpenFoodFacts
+import fr.damien.zytho.data.Parcours
 import fr.damien.zytho.data.Place
+import fr.damien.zytho.data.Prescription
+import fr.damien.zytho.data.Prescripteur
+import fr.damien.zytho.data.Reco
+import fr.damien.zytho.data.RecoKind
 import fr.damien.zytho.data.Tasting
 import fr.damien.zytho.data.WishItem
 import fr.damien.zytho.data.ZythoDb
@@ -92,6 +100,10 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
     val wishes: StateFlow<List<WishItem>> = dao.wishes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val barcodes: StateFlow<List<Barcode>> = dao.barcodes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val aromas: StateFlow<List<Aroma>> = dao.aromas().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val exclusions: StateFlow<List<CatalogExclusion>> = dao.exclusions().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Catalogue d'Anselme : bières candidates embarquées dans l'appli. */
+    val catalog: List<Candidate> by lazy { Catalog.load(app) }
 
     var draft by mutableStateOf(Draft())
     var busy by mutableStateOf(false)
@@ -177,6 +189,98 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
         prefs.edit().putString("parcours_start", style).apply()
     }
 
+    // ---------- Anselme prescripteur ----------
+
+    /** Conseils figés en cours : ils ne changent que sur « Autre idée » (ou s'ils ne sont plus valables). */
+    var recoKeys by mutableStateOf(
+        RecoKind.entries.associateWith { prefs.getString("reco_${it.name}", null) }
+    )
+        private set
+
+    /** Bières à ne pas proposer : écartées ou déjà dans la wishlist. */
+    private fun recoSkip(): Set<String> {
+        val wishIds = wishes.value.map { it.beerId }.toSet()
+        val inWish = Prescripteur.matches(catalog, beers.value.filter { it.id in wishIds }, breweries.value).values.map { it.key }
+        return exclusions.value.map { it.name }.toSet() + inWish
+    }
+
+    fun prescription(points: List<Pair<Float, Float>>, center: Pair<Float, Float>?): Prescription =
+        Prescripteur.prescribe(
+            catalog = catalog,
+            beers = beers.value,
+            breweries = breweries.value,
+            tastings = tastings.value,
+            points = points,
+            center = center,
+            current = recoKeys,
+            skip = recoSkip(),
+            nextStep = Parcours.next(beers.value, tastings.value, parcoursStart),
+        )
+
+    /** Fige les conseils affichés et garde la trace de ce qui a été conseillé (pour la fiche souvenir). */
+    fun rememberRecos(recos: List<Reco>) {
+        val keys = RecoKind.entries.associateWith { k -> recos.firstOrNull { it.kind == k }?.candidate?.key }
+        if (keys == recoKeys) return
+        recoKeys = keys
+        val seen = prefs.getStringSet("reco_seen", emptySet()).orEmpty().toMutableSet()
+        recos.forEach { seen += "${it.candidate.key}|${it.kind.name}" }
+        prefs.edit().apply {
+            keys.forEach { (k, v) -> putString("reco_${k.name}", v) }
+            putStringSet("reco_seen", seen)
+        }.apply()
+    }
+
+    /** Le type de conseil sous lequel Anselme a proposé cette bière, s'il l'a fait. */
+    fun recommendedAs(key: String): RecoKind? =
+        prefs.getStringSet("reco_seen", emptySet()).orEmpty()
+            .filter { it.substringBefore('|') == key }
+            .mapNotNull { runCatching { RecoKind.valueOf(it.substringAfter('|')) }.getOrNull() }
+            .firstOrNull()
+
+    fun otherIdea(kind: RecoKind, shown: List<Reco>, points: List<Pair<Float, Float>>, center: Pair<Float, Float>?) {
+        if (center == null) return
+        val others = shown.filter { it.kind != kind }.map { it.candidate.key }.toSet()
+        val tastedIds = tastings.value.map { it.beerId }.toSet()
+        val tastedKeys = Prescripteur.matches(catalog, beers.value.filter { it.id in tastedIds }, breweries.value).values.map { it.key }.toSet()
+        val shifts = Prescripteur.shifts(catalog, beers.value, breweries.value, tastings.value)
+        val skip = recoSkip() + others + tastedKeys
+        val pool = catalog.filter { it.key !in skip }.map { Prescripteur.place(it, shifts) }
+        val liked = Prescripteur.likedStyles(beers.value, tastings.value)
+        val ranked = Prescripteur.ranked(kind, pool, center, points, liked)
+        val current = shown.firstOrNull { it.kind == kind }?.candidate?.key
+        val next = Prescripteur.nextKey(ranked, current) ?: return
+        recoKeys = recoKeys + (kind to next)
+        prefs.edit().putString("reco_${kind.name}", next).apply()
+    }
+
+    fun notForMe(reco: Reco) = viewModelScope.launch {
+        dao.insertExclusion(CatalogExclusion(reco.candidate.key, System.currentTimeMillis()))
+    }
+
+    /** Ajoute une bière conseillée à la wishlist (en réutilisant sa fiche si elle existe déjà). */
+    fun addRecoToWish(reco: Reco) = viewModelScope.launch {
+        val c = reco.candidate
+        val existing = beers.value.firstOrNull { Catalog.normalize(it.name) == c.key }
+        val note = "${reco.kind.emoji} Conseil de Frère Anselme"
+        if (existing != null) {
+            if (wishes.value.none { it.beerId == existing.id }) {
+                dao.insertWish(WishItem(beerId = existing.id, note = note, addedAt = System.currentTimeMillis()))
+            }
+        } else {
+            save(fillFromCandidate(Draft(), c).copy(wishNote = note), "wish")
+        }
+    }
+
+    /** Remplit la fiche avec les infos du catalogue (nom, brasserie, pays, style, degré). */
+    fun fillFromCandidate(d: Draft, c: Candidate): Draft = d.copy(
+        name = c.name,
+        breweryName = c.brewery,
+        country = c.country,
+        style = c.style,
+        abv = Beers.fmtAbv(c.abv).ifBlank { d.abv },
+        trappist = c.trappist || d.trappist,
+    )
+
     // ---------- Carte des brasseries ----------
 
     suspend fun searchPlaces(query: String): List<Place> = Geocoder.search(query)
@@ -220,18 +324,20 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
                     "pays".takeIf { off.country.isNotBlank() },
                     "photo".takeIf { photo != null },
                 )
+                val inCatalog = Catalog.find(catalog, off.name, off.brand)
                 Draft(
-                    name = off.name,
-                    breweryName = off.brand,
-                    country = off.country,
-                    style = off.style,
-                    abv = Beers.fmtAbv(off.abv),
+                    name = inCatalog?.name ?: off.name,
+                    breweryName = inCatalog?.brewery ?: off.brand,
+                    country = off.country.ifBlank { inCatalog?.country.orEmpty() },
+                    style = inCatalog?.style ?: off.style,
+                    abv = Beers.fmtAbv(off.abv ?: inCatalog?.abv),
                     format = off.format.ifBlank { "33 cl" },
-                    trappist = off.trappist,
+                    trappist = off.trappist || inCatalog?.trappist == true,
                     photoPath = photo,
                     barcode = code,
                     source = "Trouvée sur Open Food Facts" +
                         (if (filled.isEmpty()) "" else " (${filled.joinToString(", ")} pré-remplis)") +
+                        (if (inCatalog != null) ", reconnue par Anselme" else "") +
                         " : vérifie la fiche",
                 )
             } else {
@@ -267,7 +373,14 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
                     .filter { l -> !l.text.contains('%') && l.text.count { it.isLetter() } >= 3 }
                     .maxByOrNull { it.boundingBox?.height() ?: 0 }
                     ?.text.orEmpty()
-                base.copy(name = prettyName(nameLine), abv = abv)
+                val read = base.copy(name = prettyName(nameLine), abv = abv)
+                val known = Catalog.find(catalog, read.name)
+                if (known != null) {
+                    fillFromCandidate(read, known).copy(
+                        abv = abv.ifBlank { Beers.fmtAbv(known.abv) },
+                        source = "Photo d'étiquette : Anselme a reconnu la ${known.name}, vérifie la fiche",
+                    )
+                } else read
             } catch (e: Exception) {
                 base.copy(source = "Photo enregistrée, lecture impossible : saisis la fiche")
             }
@@ -462,6 +575,7 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
             cellar = dao.allCellar(),
             wishes = dao.allWishes(),
             aromas = dao.allAromas(),
+            exclusions = dao.allExclusions(),
         )
         val txt = json.encodeToString(Backup.serializer(), b)
         app.contentResolver.openOutputStream(uri)?.use { it.write(txt.toByteArray(Charsets.UTF_8)) }
@@ -483,6 +597,8 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
             dao.insertCellarItems(b.cellar)
             dao.insertWishes(b.wishes)
             dao.replaceAromas(b.aromas)
+            dao.clearExclusions()
+            dao.insertExclusions(b.exclusions)
             dao.insertAromas(Beers.DEFAULT_AROMAS)
         }
     }

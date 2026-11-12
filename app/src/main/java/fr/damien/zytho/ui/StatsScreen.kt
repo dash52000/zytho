@@ -21,6 +21,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,6 +39,9 @@ fun StatsScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onSettings: () -> Un
     val breweries by vm.breweries.collectAsState()
     val tastings by vm.tastings.collectAsState()
     val cellar by vm.cellar.collectAsState()
+    // Les conseils se recalculent quand la wishlist ou les exclusions changent
+    val wishes by vm.wishes.collectAsState()
+    val exclusions by vm.exclusions.collectAsState()
 
     val rows = beerRows(beers, breweries, tastings).filter { it.last != null }
     val avg = if (tastings.isEmpty()) null else tastings.map { it.rating }.average()
@@ -68,10 +73,29 @@ fun StatsScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onSettings: () -> Un
         SectionTitle("Ta carte du goût")
         val points = tastePoints(beers, tastings)
         val center = palateCenter(points)
-        TasteMap(points, center)
+        val xy = points.map { it.x to it.y }
+        val prescription = remember(beers, breweries, tastings, wishes, exclusions, vm.recoKeys, vm.parcoursStart) {
+            vm.prescription(xy, center)
+        }
+        val recoKeys = prescription.recos.map { it.candidate.key }
+        LaunchedEffect(recoKeys) { if (prescription.recos.isNotEmpty()) vm.rememberRecos(prescription.recos) }
+        TasteMap(
+            points,
+            center,
+            ghosts = prescription.ghosts.map { g ->
+                val (jx, jy) = spread(g.candidate.key)
+                (g.x + jx) to (g.y + jy)
+            },
+            marks = prescription.recos.map { r ->
+                val (jx, jy) = spread(r.candidate.key)
+                MapMark(r.x + jx, r.y + jy, r.kind.emoji)
+            },
+        )
         Spacer(Modifier.height(8.dp))
         AnselmeBubble(Anselme.palateReading(center?.first ?: 0f, center?.second ?: 2f, points.size))
         Hint("Chaque point est une dégustation : plus il est doré, mieux tu l'as notée. Le cercle clair, c'est ton palais.")
+
+        RecoSection(vm, prescription, xy, center)
 
         SectionTitle("Top 5")
         if (top.isEmpty()) Text("Note quelques bières pour voir ton podium.", color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -2,7 +2,7 @@
 
 App Android perso de suivi des dégustations de bière. Dépôt : https://github.com/dash52000/zytho (APK compilé par GitHub Actions, publié dans Releases à chaque push sur `main`).
 
-Version actuelle : **1.2** (novembre 2026).
+Version actuelle : **1.3** (novembre 2026).
 
 ## Vision
 
@@ -39,6 +39,17 @@ Barre du bas : **Carnet**, **Cave** (cave + wishlist), **Parcours**, **Palais** 
 - **Parcours d'initiation** : point de départ au choix (Tripel par défaut), puis l'étape suivante dépend des styles aimés (note moyenne ≥ 6) ; étape validée dès qu'on déguste ce style
 - **Carte du goût** (Palais) : chaque dégustation est un point sur deux axes, sucré ↔ amer et léger ↔ corsé ; le cercle montre le centre des bières aimées, avec la lecture d'Anselme
 
+### Anselme prescripteur
+- **Catalogue** embarqué (`app/src/main/assets/candidates.csv`, 93 bières : trappistes, abbayes, classiques belges, locales Gaume / Lorraine / Luxembourg, rares). Chaque bière est placée sur les curseurs douceur, amertume, corps (0–4) ; colonnes `disponibilite` (courante / locale / rare), `verif` (web / connu / a_confirmer / damien) et `source`. Modifiable dans R, intégré au build suivant
+- **Dans Palais, sous la carte du goût** : 🎯 Dans tes cordes (la plus proche du centre de tes bières aimées, avantage aux styles que tu aimes), 🧭 Un pas de côté (au bord de ta zone, vers ce que tu as le moins exploré), 💎 Chasse au trésor (une rare dans ta zone, si elle existe). 🎯 et 🧭 ne proposent que des bières courantes ou locales
+- Chaque conseil : le pourquoi dans la voix d'Anselme, boutons **→ Wishlist**, **Autre idée**, **Pas pour moi** (exclusion définitive)
+- Conseils figés : ils ne changent que sur « Autre idée » (ou s'ils sont goûtés, écartés, mis en wishlist)
+- Démarrage après 3 dégustations notées et au moins une ≥ 7 ; avant, renvoi vers le classique de l'étape du parcours
+- Points pâles sur la carte : les bières du catalogue pas encore goûtées
+- **Recalage** : quand une bière du catalogue est goûtée en mode guidé, ton profil remplace l'estimation ; après 2 écarts dans le même sens sur un style, tout le style est décalé
+- **Fiche souvenir** : Anselme compare ta note et ton profil à sa prédiction quand la bière vient de son catalogue
+- **Autocomplétion** de la saisie depuis le catalogue (nom, brasserie, pays, style, degré) ; après un scan Open Food Facts ou une photo d'étiquette, le style du catalogue l'emporte
+
 ### Cave et wishlist
 - Cave : stock par bière, millésime et format ; « à boire avant » conseillé selon le style ; bouton « Ouvrir » (stock −1 et fiche de dégustation pré-remplie)
 - Wishlist : bouton « Goûtée ! »
@@ -52,7 +63,7 @@ Barre du bas : **Carnet**, **Cave** (cave + wishlist), **Parcours**, **Palais** 
 - CSV des dégustations (une ligne par dégustation, virgule, UTF-8, lisible par `readr::read_csv()`), avec les colonnes du mode guidé
 - Sauvegarde et restauration JSON complètes (sans les photos)
 
-## Modèle de données (Room, version 2)
+## Modèle de données (Room, version 3)
 
 | Table | Champs clés |
 | --- | --- |
@@ -63,8 +74,9 @@ Barre du bas : **Carnet**, **Cave** (cave + wishlist), **Parcours**, **Palais** 
 | cellar | bière, quantité, millésime, format, à boire avant |
 | wish | bière, note, date d'ajout |
 | aroma | libellé, famille, perso |
+| catalog_exclusion | nom normalisé (« Pas pour moi »), date |
 
-Migration v1 → v2 : colonnes du mode guidé ajoutées à `tasting`.
+Migration v1 → v2 : colonnes du mode guidé ajoutées à `tasting`. Migration v2 → v3 : table `catalog_exclusion`. Conseils figés et historique des conseils dans les préférences.
 
 ## Références locales vérifiées
 
@@ -78,6 +90,7 @@ Kotlin 2.0, Jetpack Compose, Material 3, Room, CameraX, ML Kit (code-barres et t
 
 | Version | Contenu |
 | --- | --- |
+| 1.3 | Anselme prescripteur (catalogue de 93 bières, 🎯 🧭 💎, recalage), autocomplétion de la saisie |
 | 1.2 | Carte des brasseries, départ du parcours au choix, avis modifiables |
 | 1.1 | Frère Anselme, dégustation guidée, fiches de style, parcours, carte du goût, scan enrichi, « Encore une ? » |
 | 1.0 | Carnet, scan, photo d'étiquette, cave, wishlist, stats, export |

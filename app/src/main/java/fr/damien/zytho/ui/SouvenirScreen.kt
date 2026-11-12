@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import fr.damien.zytho.ZythoViewModel
 import fr.damien.zytho.data.Anselme
+import fr.damien.zytho.data.Catalog
+import fr.damien.zytho.data.Prescripteur
 import fr.damien.zytho.data.Beers
 import fr.damien.zytho.data.StyleGuide
 import java.io.File
@@ -170,7 +172,12 @@ fun SouvenirScreen(
             }
 
             Spacer(Modifier.height(16.dp))
-            AnselmeBubble(Anselme.feedback(t, style, beer.name))
+            val known = Catalog.find(vm.catalog, beer.name, brewery?.name.orEmpty())
+            val fromCatalog = if (known == null) emptyList() else Prescripteur.souvenir(
+                t, known, vm.recommendedAs(known.key),
+                Prescripteur.shifts(vm.catalog, beers, breweries, tastings),
+            )
+            AnselmeBubble(Anselme.feedback(t, style, beer.name) + fromCatalog)
 
             Spacer(Modifier.height(16.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
