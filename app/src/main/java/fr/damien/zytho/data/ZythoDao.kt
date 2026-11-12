@@ -17,14 +17,17 @@ interface ZythoDao {
     @Query("SELECT * FROM beer ORDER BY name COLLATE NOCASE")
     fun beers(): Flow<List<Beer>>
 
-    @Query("SELECT * FROM tasting ORDER BY date DESC")
-    fun tastings(): Flow<List<Tasting>>
+    @Query("SELECT * FROM tasting WHERE profileId = :profileId ORDER BY date DESC")
+    fun tastings(profileId: Long): Flow<List<Tasting>>
 
     @Query("SELECT * FROM cellar ORDER BY addedAt DESC")
     fun cellar(): Flow<List<CellarItem>>
 
-    @Query("SELECT * FROM wish ORDER BY addedAt DESC")
-    fun wishes(): Flow<List<WishItem>>
+    @Query("SELECT * FROM wish WHERE profileId = :profileId ORDER BY addedAt DESC")
+    fun wishes(profileId: Long): Flow<List<WishItem>>
+
+    @Query("SELECT * FROM profile ORDER BY id")
+    fun profiles(): Flow<List<Profile>>
 
     @Query("SELECT * FROM barcode")
     fun barcodes(): Flow<List<Barcode>>
@@ -32,8 +35,8 @@ interface ZythoDao {
     @Query("SELECT * FROM aroma ORDER BY family, label")
     fun aromas(): Flow<List<Aroma>>
 
-    @Query("SELECT * FROM catalog_exclusion")
-    fun exclusions(): Flow<List<CatalogExclusion>>
+    @Query("SELECT * FROM catalog_exclusion WHERE profileId = :profileId")
+    fun exclusions(profileId: Long): Flow<List<CatalogExclusion>>
 
     // Lectures ponctuelles
     @Query("SELECT * FROM brewery") suspend fun allBreweries(): List<Brewery>
@@ -44,6 +47,13 @@ interface ZythoDao {
     @Query("SELECT * FROM wish") suspend fun allWishes(): List<WishItem>
     @Query("SELECT * FROM aroma") suspend fun allAromas(): List<Aroma>
     @Query("SELECT * FROM catalog_exclusion") suspend fun allExclusions(): List<CatalogExclusion>
+    @Query("SELECT * FROM profile") suspend fun allProfiles(): List<Profile>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insertProfileIfMissing(p: Profile)
+    @Insert suspend fun insertProfile(p: Profile): Long
+    @Update suspend fun updateProfile(p: Profile)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertProfiles(l: List<Profile>)
+    @Query("DELETE FROM profile") suspend fun clearProfiles()
 
     @Query("SELECT * FROM barcode WHERE code = :code LIMIT 1")
     suspend fun barcode(code: String): Barcode?

@@ -10,9 +10,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(
     entities = [
         Brewery::class, Beer::class, Barcode::class, Tasting::class,
-        CellarItem::class, WishItem::class, Aroma::class, CatalogExclusion::class,
+        CellarItem::class, WishItem::class, Aroma::class, CatalogExclusion::class, Profile::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class ZythoDb : RoomDatabase() {
@@ -43,13 +43,31 @@ abstract class ZythoDb : RoomDatabase() {
             }
         }
 
+        /** v3 -> v4 : profils (dégustations, wishlist et exclusions par profil). */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `profile` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)"
+                )
+                db.execSQL("INSERT OR IGNORE INTO `profile` (`id`, `name`, `createdAt`) VALUES (1, 'Moi', 0)")
+                db.execSQL("ALTER TABLE `tasting` ADD COLUMN `profileId` INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE `wish` ADD COLUMN `profileId` INTEGER NOT NULL DEFAULT 1")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `catalog_exclusion_new` (`name` TEXT NOT NULL, `addedAt` INTEGER NOT NULL, `profileId` INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(`profileId`, `name`))"
+                )
+                db.execSQL("INSERT INTO `catalog_exclusion_new` (`name`, `addedAt`, `profileId`) SELECT `name`, `addedAt`, 1 FROM `catalog_exclusion`")
+                db.execSQL("DROP TABLE `catalog_exclusion`")
+                db.execSQL("ALTER TABLE `catalog_exclusion_new` RENAME TO `catalog_exclusion`")
+            }
+        }
+
         fun get(context: Context): ZythoDb =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     ZythoDb::class.java,
                     "zytho.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { instance = it }
             }
     }
 }

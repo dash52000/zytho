@@ -2,7 +2,7 @@
 
 App Android perso de suivi des dégustations de bière. Dépôt : https://github.com/dash52000/zytho (APK compilé par GitHub Actions, publié dans Releases à chaque push sur `main`).
 
-Version actuelle : **1.3** (novembre 2026).
+Version actuelle : **1.4** (novembre 2026).
 
 ## Vision
 
@@ -50,6 +50,13 @@ Barre du bas : **Carnet**, **Cave** (cave + wishlist), **Parcours**, **Palais** 
 - **Fiche souvenir** : Anselme compare ta note et ton profil à sa prédiction quand la bière vient de son catalogue
 - **Autocomplétion** de la saisie depuis le catalogue (nom, brasserie, pays, style, degré) ; après un scan Open Food Facts ou une photo d'étiquette, le style du catalogue l'emporte
 
+### Profils
+- Plusieurs dégustateurs sur le même téléphone ; profil « Moi » par défaut (renommable)
+- Pastille du profil actif en haut du Carnet et de Palais : changer, créer, renommer
+- **Propre à chaque profil** : dégustations (carnet, carte du goût, stats), wishlist, parcours, conseils d'Anselme et « Pas pour moi »
+- **Commun** : fiches bière et brasseries, cave, codes-barres, carte des brasseries (comptes du profil actif)
+- Une bière goûtée à deux = une fiche par profil (on change de profil entre les deux)
+
 ### Cave et wishlist
 - Cave : stock par bière, millésime et format ; « à boire avant » conseillé selon le style ; bouton « Ouvrir » (stock −1 et fiche de dégustation pré-remplie)
 - Wishlist : bouton « Goûtée ! »
@@ -60,23 +67,24 @@ Barre du bas : **Carnet**, **Cave** (cave + wishlist), **Parcours**, **Palais** 
 - Marqueur : nom (✝ si Trappiste), nombre de bières, de dégustations, note moyenne
 
 ### Export
-- CSV des dégustations (une ligne par dégustation, virgule, UTF-8, lisible par `readr::read_csv()`), avec les colonnes du mode guidé
+- CSV des dégustations de tous les profils (une ligne par dégustation, colonne `profil` en tête, virgule, UTF-8, lisible par `readr::read_csv()`), avec les colonnes du mode guidé
 - Sauvegarde et restauration JSON complètes (sans les photos)
 
-## Modèle de données (Room, version 3)
+## Modèle de données (Room, version 4)
 
 | Table | Champs clés |
 | --- | --- |
 | brewery | nom, pays, région, trappiste, lat/lon |
 | beer | nom, brasserie, style, degré, photo, à racheter |
 | barcode | code EAN, bière, format |
-| tasting | bière, date, note, arômes, lieu, service, millésime, format, commentaire, robe, douceur, amertume, corps, pétillance, finale |
+| profile | nom, date de création |
+| tasting | profil, bière, date, note, arômes, lieu, service, millésime, format, commentaire, robe, douceur, amertume, corps, pétillance, finale |
 | cellar | bière, quantité, millésime, format, à boire avant |
-| wish | bière, note, date d'ajout |
+| wish | profil, bière, note, date d'ajout |
 | aroma | libellé, famille, perso |
-| catalog_exclusion | nom normalisé (« Pas pour moi »), date |
+| catalog_exclusion | profil, nom normalisé (« Pas pour moi »), date |
 
-Migration v1 → v2 : colonnes du mode guidé ajoutées à `tasting`. Migration v2 → v3 : table `catalog_exclusion`. Conseils figés et historique des conseils dans les préférences.
+Migration v1 → v2 : colonnes du mode guidé ajoutées à `tasting`. Migration v2 → v3 : table `catalog_exclusion`. Migration v3 → v4 : table `profile` (profil 1 « Moi »), colonne `profileId` (défaut 1) dans `tasting`, `wish`, `catalog_exclusion`. Conseils figés, historique des conseils et départ du parcours dans les préférences, par profil.
 
 ## Références locales vérifiées
 
@@ -90,6 +98,7 @@ Kotlin 2.0, Jetpack Compose, Material 3, Room, CameraX, ML Kit (code-barres et t
 
 | Version | Contenu |
 | --- | --- |
+| 1.4 | Profils (dégustations, wishlist, parcours et conseils par profil ; cave commune) |
 | 1.3 | Anselme prescripteur (catalogue de 93 bières, 🎯 🧭 💎, recalage), autocomplétion de la saisie |
 | 1.2 | Carte des brasseries, départ du parcours au choix, avis modifiables |
 | 1.1 | Frère Anselme, dégustation guidée, fiches de style, parcours, carte du goût, scan enrichi, « Encore une ? » |

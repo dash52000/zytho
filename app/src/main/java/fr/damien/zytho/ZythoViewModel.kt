@@ -27,6 +27,7 @@ import fr.damien.zytho.data.Geocoder
 import fr.damien.zytho.data.OpenFoodFacts
 import fr.damien.zytho.data.Parcours
 import fr.damien.zytho.data.Place
+import fr.damien.zytho.data.Profile
 import fr.damien.zytho.data.Prescription
 import fr.damien.zytho.data.Prescripteur
 import fr.damien.zytho.data.Reco
@@ -35,6 +36,9 @@ import fr.damien.zytho.data.Tasting
 import fr.damien.zytho.data.WishItem
 import fr.damien.zytho.data.ZythoDb
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -88,19 +92,52 @@ data class Draft(
     val wishNote: String = "",
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
     private val db = ZythoDb.get(app)
     private val dao = db.dao()
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true }
 
+    private val prefs = app.getSharedPreferences("zytho", android.content.Context.MODE_PRIVATE)
+
+    // ---------- Profils ----------
+
+    /** Profil actif : les dégustations, la wishlist, le parcours et les conseils lui sont propres. */
+    private val activeId = MutableStateFlow(prefs.getLong("profile_active", 1L))
+    val activeProfileId: StateFlow<Long> = activeId
+    val profiles: StateFlow<List<Profile>> = dao.profiles().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Clé de préférence propre au profil actif (le profil 1 garde les clés d'origine). */
+    private fun pk(key: String): String = if (activeId.value == 1L) key else "p${activeId.value}_$key"
+
+    fun switchProfile(id: Long) {
+        if (id == activeId.value) return
+        activeId.value = id
+        prefs.edit().putLong("profile_active", id).apply()
+        parcoursStart = prefs.getString(pk("parcours_start"), "Tripel") ?: "Tripel"
+        recoKeys = loadRecoKeys()
+    }
+
+    fun addProfile(name: String) = viewModelScope.launch {
+        val n = name.trim()
+        if (n.isEmpty()) return@launch
+        val id = dao.insertProfile(Profile(name = n, createdAt = System.currentTimeMillis()))
+        switchProfile(id)
+    }
+
+    fun renameProfile(p: Profile, name: String) = viewModelScope.launch {
+        val n = name.trim()
+        if (n.isNotEmpty()) dao.updateProfile(p.copy(name = n))
+    }
+
     val breweries: StateFlow<List<Brewery>> = dao.breweries().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val beers: StateFlow<List<Beer>> = dao.beers().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-    val tastings: StateFlow<List<Tasting>> = dao.tastings().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val tastings: StateFlow<List<Tasting>> = activeId.flatMapLatest { dao.tastings(it) }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val cellar: StateFlow<List<CellarItem>> = dao.cellar().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-    val wishes: StateFlow<List<WishItem>> = dao.wishes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val wishes: StateFlow<List<WishItem>> = activeId.flatMapLatest { dao.wishes(it) }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val barcodes: StateFlow<List<Barcode>> = dao.barcodes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val aromas: StateFlow<List<Aroma>> = dao.aromas().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-    val exclusions: StateFlow<List<CatalogExclusion>> = dao.exclusions().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val exclusions: StateFlow<List<CatalogExclusion>> = activeId.flatMapLatest { dao.exclusions(it) }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /** Catalogue d'Anselme : bières candidates embarquées dans l'appli. */
     val catalog: List<Candidate> by lazy { Catalog.load(app) }
@@ -130,7 +167,10 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
     }
 
     init {
-        viewModelScope.launch { dao.insertAromas(Beers.DEFAULT_AROMAS) }
+        viewModelScope.launch {
+            dao.insertAromas(Beers.DEFAULT_AROMAS)
+            dao.insertProfileIfMissing(Profile(id = 1, name = "Moi"))
+        }
     }
 
     // ---------- Préparation des brouillons ----------
@@ -180,21 +220,21 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
 
     // ---------- Parcours ----------
 
-    private val prefs = app.getSharedPreferences("zytho", android.content.Context.MODE_PRIVATE)
-    var parcoursStart by mutableStateOf(prefs.getString("parcours_start", "Tripel") ?: "Tripel")
+    var parcoursStart by mutableStateOf(prefs.getString(pk("parcours_start"), "Tripel") ?: "Tripel")
         private set
 
     fun changeParcoursStart(style: String) {
         parcoursStart = style
-        prefs.edit().putString("parcours_start", style).apply()
+        prefs.edit().putString(pk("parcours_start"), style).apply()
     }
 
     // ---------- Anselme prescripteur ----------
 
     /** Conseils figés en cours : ils ne changent que sur « Autre idée » (ou s'ils ne sont plus valables). */
-    var recoKeys by mutableStateOf(
-        RecoKind.entries.associateWith { prefs.getString("reco_${it.name}", null) }
-    )
+    private fun loadRecoKeys(): Map<RecoKind, String?> =
+        RecoKind.entries.associateWith { prefs.getString(pk("reco_${it.name}"), null) }
+
+    var recoKeys by mutableStateOf(loadRecoKeys())
         private set
 
     /** Bières à ne pas proposer : écartées ou déjà dans la wishlist. */
@@ -222,17 +262,17 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
         val keys = RecoKind.entries.associateWith { k -> recos.firstOrNull { it.kind == k }?.candidate?.key }
         if (keys == recoKeys) return
         recoKeys = keys
-        val seen = prefs.getStringSet("reco_seen", emptySet()).orEmpty().toMutableSet()
+        val seen = prefs.getStringSet(pk("reco_seen"), emptySet()).orEmpty().toMutableSet()
         recos.forEach { seen += "${it.candidate.key}|${it.kind.name}" }
         prefs.edit().apply {
-            keys.forEach { (k, v) -> putString("reco_${k.name}", v) }
-            putStringSet("reco_seen", seen)
+            keys.forEach { (k, v) -> putString(pk("reco_${k.name}"), v) }
+            putStringSet(pk("reco_seen"), seen)
         }.apply()
     }
 
     /** Le type de conseil sous lequel Anselme a proposé cette bière, s'il l'a fait. */
     fun recommendedAs(key: String): RecoKind? =
-        prefs.getStringSet("reco_seen", emptySet()).orEmpty()
+        prefs.getStringSet(pk("reco_seen"), emptySet()).orEmpty()
             .filter { it.substringBefore('|') == key }
             .mapNotNull { runCatching { RecoKind.valueOf(it.substringAfter('|')) }.getOrNull() }
             .firstOrNull()
@@ -250,11 +290,11 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
         val current = shown.firstOrNull { it.kind == kind }?.candidate?.key
         val next = Prescripteur.nextKey(ranked, current) ?: return
         recoKeys = recoKeys + (kind to next)
-        prefs.edit().putString("reco_${kind.name}", next).apply()
+        prefs.edit().putString(pk("reco_${kind.name}"), next).apply()
     }
 
     fun notForMe(reco: Reco) = viewModelScope.launch {
-        dao.insertExclusion(CatalogExclusion(reco.candidate.key, System.currentTimeMillis()))
+        dao.insertExclusion(CatalogExclusion(reco.candidate.key, System.currentTimeMillis(), activeId.value))
     }
 
     /** Ajoute une bière conseillée à la wishlist (en réutilisant sa fiche si elle existe déjà). */
@@ -264,7 +304,7 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
         val note = "${reco.kind.emoji} Conseil de Frère Anselme"
         if (existing != null) {
             if (wishes.value.none { it.beerId == existing.id }) {
-                dao.insertWish(WishItem(beerId = existing.id, note = note, addedAt = System.currentTimeMillis()))
+                dao.insertWish(WishItem(beerId = existing.id, note = note, addedAt = System.currentTimeMillis(), profileId = activeId.value))
             }
         } else {
             save(fillFromCandidate(Draft(), c).copy(wishNote = note), "wish")
@@ -468,6 +508,7 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
                         body = d.body,
                         fizz = d.fizz,
                         finish = d.finish.ifBlank { null },
+                        profileId = existing?.profileId ?: activeId.value,
                     )
                 lastTastingId = if (existing != null) {
                     dao.updateTasting(tasting)
@@ -491,7 +532,7 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
                     )
                 }
             }
-            "wish" -> dao.insertWish(WishItem(beerId = beerId, note = d.wishNote.trim(), addedAt = now))
+            "wish" -> dao.insertWish(WishItem(beerId = beerId, note = d.wishNote.trim(), addedAt = now, profileId = activeId.value))
             else -> Unit
         }
         return beerId
@@ -543,15 +584,16 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
     suspend fun exportCsv(uri: Uri) = withContext(Dispatchers.IO) {
         val beersById = dao.allBeers().associateBy { it.id }
         val breweriesById = dao.allBreweries().associateBy { it.id }
+        val profileNames = dao.allProfiles().associate { it.id to it.name }
         val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val sb = StringBuilder()
-        sb.append("date,biere,brasserie,pays,style,degre,note,aromes,lieu,service,millesime,format,a_racheter,commentaire,robe,douceur,amertume,corps,petillance,finale\n")
+        sb.append("profil,date,biere,brasserie,pays,style,degre,note,aromes,lieu,service,millesime,format,a_racheter,commentaire,robe,douceur,amertume,corps,petillance,finale\n")
         for (t in dao.allTastings()) {
             val beer = beersById[t.beerId] ?: continue
             val br = beer.breweryId?.let { breweriesById[it] }
             val date = Instant.ofEpochMilli(t.date).atZone(ZoneId.systemDefault()).toLocalDate().format(fmt)
             val cells = listOf(
-                date, beer.name, br?.name.orEmpty(), br?.country.orEmpty(), beer.style,
+                profileNames[t.profileId] ?: "Profil ${t.profileId}", date, beer.name, br?.name.orEmpty(), br?.country.orEmpty(), beer.style,
                 beer.abv?.toString().orEmpty(), t.rating.toString(), t.aromas, t.place, t.service,
                 t.vintage?.toString().orEmpty(), t.format, beer.rebuy, t.comment,
                 t.color.orEmpty(), t.sweetness?.toString().orEmpty(), t.bitterness?.toString().orEmpty(),
@@ -576,6 +618,7 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
             wishes = dao.allWishes(),
             aromas = dao.allAromas(),
             exclusions = dao.allExclusions(),
+            profiles = dao.allProfiles(),
         )
         val txt = json.encodeToString(Backup.serializer(), b)
         app.contentResolver.openOutputStream(uri)?.use { it.write(txt.toByteArray(Charsets.UTF_8)) }
@@ -599,8 +642,12 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
             dao.replaceAromas(b.aromas)
             dao.clearExclusions()
             dao.insertExclusions(b.exclusions)
+            dao.clearProfiles()
+            dao.insertProfiles(b.profiles)
+            dao.insertProfileIfMissing(Profile(id = 1, name = "Moi"))
             dao.insertAromas(Beers.DEFAULT_AROMAS)
         }
+        if (dao.allProfiles().none { it.id == activeId.value }) switchProfile(1)
     }
 }
 

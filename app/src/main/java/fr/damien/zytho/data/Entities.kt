@@ -1,8 +1,18 @@
 package fr.damien.zytho.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
+
+/** Un profil de dégustateur. Le profil 1 (« Moi ») existe toujours. */
+@Serializable
+@Entity(tableName = "profile")
+data class Profile(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val createdAt: Long = 0,
+)
 
 @Serializable
 @Entity(tableName = "brewery")
@@ -60,6 +70,7 @@ data class Tasting(
     val body: Int? = null,
     val fizz: Int? = null,
     val finish: String? = null,
+    @ColumnInfo(defaultValue = "1") val profileId: Long = 1,
 )
 
 @Serializable
@@ -82,6 +93,7 @@ data class WishItem(
     val beerId: Long,
     val note: String = "",
     val addedAt: Long = 0,
+    @ColumnInfo(defaultValue = "1") val profileId: Long = 1,
 )
 
 @Serializable
@@ -94,11 +106,12 @@ data class Aroma(
 
 /** Bière du catalogue qu'Anselme ne doit plus proposer (« Pas pour moi »). */
 @Serializable
-@Entity(tableName = "catalog_exclusion")
+@Entity(tableName = "catalog_exclusion", primaryKeys = ["profileId", "name"])
 data class CatalogExclusion(
     /** Clé normalisée du nom (Catalog.normalize) */
-    @PrimaryKey val name: String,
+    val name: String,
     val addedAt: Long = 0,
+    @ColumnInfo(defaultValue = "1") val profileId: Long = 1,
 )
 
 @Serializable
@@ -112,4 +125,5 @@ data class Backup(
     val wishes: List<WishItem> = emptyList(),
     val aromas: List<Aroma> = emptyList(),
     val exclusions: List<CatalogExclusion> = emptyList(),
+    val profiles: List<Profile> = emptyList(),
 )

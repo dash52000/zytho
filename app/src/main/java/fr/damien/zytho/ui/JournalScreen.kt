@@ -75,6 +75,7 @@ fun JournalScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onMap: () -> Unit)
             modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 8.dp),
         ) {
             Text("Carnet", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            ProfileChip(vm)
             IconButton(onClick = onMap) { Icon(Icons.Filled.Map, contentDescription = "Carte des brasseries", tint = Amber) }
         }
         OutlinedTextField(

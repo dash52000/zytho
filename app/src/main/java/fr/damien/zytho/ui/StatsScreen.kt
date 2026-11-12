@@ -56,6 +56,7 @@ fun StatsScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onSettings: () -> Un
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
             Text("Palais", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            ProfileChip(vm)
             IconButton(onClick = onMap) { Icon(Icons.Filled.Map, contentDescription = "Carte des brasseries", tint = Amber) }
             IconButton(onClick = onSettings) { Icon(Icons.Filled.Settings, contentDescription = "Réglages et export") }
         }
