@@ -61,6 +61,14 @@ data class Draft(
     val vintage: String = "",
     val format: String = "33 cl",
     val comment: String = "",
+    val trappist: Boolean = false,
+    // Dégustation guidée (facultatif)
+    val color: String = "",
+    val sweetness: Int? = null,
+    val bitterness: Int? = null,
+    val body: Int? = null,
+    val fizz: Int? = null,
+    val finish: String = "",
     // Cave
     val quantity: Int = 1,
     val drinkBefore: String = "",
@@ -83,6 +91,27 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
 
     var draft by mutableStateOf(Draft())
     var busy by mutableStateOf(false)
+    var lastTastingId: Long = 0
+
+    /** « Encore une ? » : bières goûtées au moins deux fois, les plus fréquentes d'abord. */
+    fun habitualBeers(): List<Beer> {
+        val counts = tastings.value.groupingBy { it.beerId }.eachCount().filter { it.value >= 2 }
+        val byId = beers.value.associateBy { it.id }
+        return counts.entries.sortedByDescending { it.value }.mapNotNull { byId[it.key] }.take(3)
+    }
+
+    /** Prépare une dégustation express d'une bière habituelle, avec la dernière note. */
+    suspend fun prepareAgain(beerId: Long) {
+        prepareForBeer(beerId)
+        val last = tastings.value.filter { it.beerId == beerId }.maxByOrNull { it.date }
+        draft = draft.copy(
+            rating = last?.rating?.toFloat() ?: draft.rating,
+            place = last?.place?.ifBlank { null } ?: draft.place,
+            service = last?.service?.ifBlank { null } ?: draft.service,
+            format = last?.format?.ifBlank { null } ?: draft.format,
+            source = "Encore une !",
+        )
+    }
 
     init {
         viewModelScope.launch { dao.insertAromas(Beers.DEFAULT_AROMAS) }
@@ -131,12 +160,32 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
             }
             val off = OpenFoodFacts.lookup(code)
             draft = if (off != null) {
+                var photo: String? = null
+                val img = off.imageUrl
+                if (img != null) {
+                    val dir = File(app.filesDir, "photos").apply { mkdirs() }
+                    val file = File(dir, "off_${code}_${System.currentTimeMillis()}.jpg")
+                    if (OpenFoodFacts.downloadImage(img, file)) photo = file.absolutePath
+                }
+                val filled = listOfNotNull(
+                    "style".takeIf { off.style.isNotBlank() },
+                    "format".takeIf { off.format.isNotBlank() },
+                    "pays".takeIf { off.country.isNotBlank() },
+                    "photo".takeIf { photo != null },
+                )
                 Draft(
                     name = off.name,
                     breweryName = off.brand,
+                    country = off.country,
+                    style = off.style,
                     abv = Beers.fmtAbv(off.abv),
+                    format = off.format.ifBlank { "33 cl" },
+                    trappist = off.trappist,
+                    photoPath = photo,
                     barcode = code,
-                    source = "Trouvée sur Open Food Facts : vérifie la fiche",
+                    source = "Trouvée sur Open Food Facts" +
+                        (if (filled.isEmpty()) "" else " (${filled.joinToString(", ")} pré-remplis)") +
+                        " : vérifie la fiche",
                 )
             } else {
                 Draft(barcode = code, source = "Code $code inconnu : remplis la fiche, il sera mémorisé")
@@ -198,12 +247,14 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
         val breweryId: Long? = if (breweryName.isBlank()) null else {
             val existing = dao.breweryByName(breweryName)
             if (existing != null) {
-                if (d.country.isNotBlank() && existing.country != d.country.trim()) {
-                    dao.updateBrewery(existing.copy(country = d.country.trim()))
+                val country = if (d.country.isNotBlank()) d.country.trim() else existing.country
+                val trappist = existing.trappist || d.trappist
+                if (country != existing.country || trappist != existing.trappist) {
+                    dao.updateBrewery(existing.copy(country = country, trappist = trappist))
                 }
                 existing.id
             } else {
-                dao.insertBrewery(Brewery(name = breweryName, country = d.country.trim()))
+                dao.insertBrewery(Brewery(name = breweryName, country = d.country.trim(), trappist = d.trappist))
             }
         }
         val abv = Beers.parseAbv(d.abv)
@@ -237,19 +288,27 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
         if (!code.isNullOrBlank()) dao.insertBarcode(Barcode(code, beerId, d.format))
 
         when (mode) {
-            "tasting" -> dao.insertTasting(
-                Tasting(
-                    beerId = beerId,
-                    date = now,
-                    rating = d.rating.toDouble(),
-                    aromas = d.aromas.sorted().joinToString(", "),
-                    place = d.place,
-                    service = d.service,
-                    vintage = d.vintage.trim().toIntOrNull(),
-                    format = d.format,
-                    comment = d.comment.trim(),
+            "tasting" -> {
+                lastTastingId = dao.insertTasting(
+                    Tasting(
+                        beerId = beerId,
+                        date = now,
+                        rating = d.rating.toDouble(),
+                        aromas = d.aromas.sorted().joinToString(", "),
+                        place = d.place,
+                        service = d.service,
+                        vintage = d.vintage.trim().toIntOrNull(),
+                        format = d.format,
+                        comment = d.comment.trim(),
+                        color = d.color.ifBlank { null },
+                        sweetness = d.sweetness,
+                        bitterness = d.bitterness,
+                        body = d.body,
+                        fizz = d.fizz,
+                        finish = d.finish.ifBlank { null },
+                    )
                 )
-            )
+            }
             "cellar" -> {
                 val vintage = d.vintage.trim().toIntOrNull()
                 val limit = d.drinkBefore.trim().toIntOrNull() ?: suggestedDrinkBefore(d)
@@ -319,7 +378,7 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
         val breweriesById = dao.allBreweries().associateBy { it.id }
         val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val sb = StringBuilder()
-        sb.append("date,biere,brasserie,pays,style,degre,note,aromes,lieu,service,millesime,format,a_racheter,commentaire\n")
+        sb.append("date,biere,brasserie,pays,style,degre,note,aromes,lieu,service,millesime,format,a_racheter,commentaire,robe,douceur,amertume,corps,petillance,finale\n")
         for (t in dao.allTastings()) {
             val beer = beersById[t.beerId] ?: continue
             val br = beer.breweryId?.let { breweriesById[it] }
@@ -328,6 +387,8 @@ class ZythoViewModel(private val app: Application) : AndroidViewModel(app) {
                 date, beer.name, br?.name.orEmpty(), br?.country.orEmpty(), beer.style,
                 beer.abv?.toString().orEmpty(), t.rating.toString(), t.aromas, t.place, t.service,
                 t.vintage?.toString().orEmpty(), t.format, beer.rebuy, t.comment,
+                t.color.orEmpty(), t.sweetness?.toString().orEmpty(), t.bitterness?.toString().orEmpty(),
+                t.body?.toString().orEmpty(), t.fizz?.toString().orEmpty(), t.finish.orEmpty(),
             )
             sb.append(cells.joinToString(",") { csvCell(it) }).append('\n')
         }

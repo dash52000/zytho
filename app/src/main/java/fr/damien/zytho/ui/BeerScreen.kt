@@ -40,10 +40,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import fr.damien.zytho.ZythoViewModel
 import fr.damien.zytho.data.Beers
+import fr.damien.zytho.data.StyleGuide
 import fr.damien.zytho.data.Tasting
 
 @Composable
-fun BeerScreen(vm: ZythoViewModel, beerId: Long, onBack: () -> Unit, onAction: (String) -> Unit) {
+fun BeerScreen(
+    vm: ZythoViewModel,
+    beerId: Long,
+    onBack: () -> Unit,
+    onAction: (String) -> Unit,
+    onStyle: (Int) -> Unit,
+    onSouvenir: (Long) -> Unit,
+) {
     val beers by vm.beers.collectAsState()
     val breweries by vm.breweries.collectAsState()
     val tastings by vm.tastings.collectAsState()
@@ -112,6 +120,23 @@ fun BeerScreen(vm: ZythoViewModel, beerId: Long, onBack: () -> Unit, onAction: (
                         }
                     }
                 }
+                val styleInfo = StyleGuide.of(beer.style)
+                if (styleInfo != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Card(
+                        onClick = { onStyle(StyleGuide.indexOf(styleInfo.name)) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            MonkAvatar(36.dp)
+                            Spacer(Modifier.width(10.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text("${styleInfo.emoji} ${styleInfo.name} : ${styleInfo.tagline}", style = MaterialTheme.typography.bodyMedium)
+                                Text("Lire la fiche du style →", style = MaterialTheme.typography.bodySmall, color = Amber)
+                            }
+                        }
+                    }
+                }
                 SectionTitle("À racheter ?")
                 ChipRow(Beers.REBUY, beer.rebuy) { vm.setRebuy(beer, it) }
 
@@ -140,7 +165,7 @@ fun BeerScreen(vm: ZythoViewModel, beerId: Long, onBack: () -> Unit, onAction: (
                 if (history.isEmpty()) Text("Pas encore goûtée.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             items(history, key = { it.id }) { t ->
-                Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Card(onClick = { onSouvenir(t.id) }, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
                         RatingBadge(t.rating)
                         Spacer(Modifier.width(12.dp))
@@ -153,7 +178,13 @@ fun BeerScreen(vm: ZythoViewModel, beerId: Long, onBack: () -> Unit, onAction: (
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            if (t.aromas.isNotBlank()) Text(t.aromas, color = Amber, style = MaterialTheme.typography.bodyMedium)
+                            if (t.aromas.isNotBlank()) {
+                                Text(
+                                    t.aromas.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                                        .joinToString("  ") { StyleGuide.icon(it) + " " + it.lowercase() },
+                                    color = Amber, style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
                             if (t.comment.isNotBlank()) Text(t.comment, style = MaterialTheme.typography.bodyMedium)
                         }
                         IconButton(onClick = { tastingToDelete = t }) {

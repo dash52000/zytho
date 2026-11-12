@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import fr.damien.zytho.ZythoViewModel
 import fr.damien.zytho.data.Beers
+import fr.damien.zytho.data.StyleGuide
 
 /** Après un scan, une photo ou une saisie : que fait-on de cette bière ? */
 @Composable
@@ -100,13 +101,12 @@ fun ChooseScreen(
             if (id != null) {
                 OutlinedButton(onClick = { onBeer(id) }, modifier = Modifier.fillMaxWidth()) { Text("Voir la fiche") }
             }
-            if (d.beerId == null && d.style.isBlank()) {
-                Text(
-                    "Astuce : garde de ${Beers.gardeYears("Quadrupel")} ans conseillée pour une Quad, ${Beers.gardeYears("Gueuze")} pour une Gueuze.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            val style = StyleGuide.of(d.style)
+            Spacer(Modifier.height(8.dp))
+            AnselmeBubble(
+                if (style != null) "${style.emoji} Une ${style.name} ! ${style.tagline} En cave, je lui donne environ ${Beers.gardeYears(style.name)} an(s)."
+                else "Je ne connais pas encore son style : indique-le dans la fiche, je te dirai quoi y chercher."
+            )
         }
     }
 }

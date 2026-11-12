@@ -17,7 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.QrCodeScanner
@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -68,9 +70,9 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
 
     val tabs = listOf(
         Tab("journal", "Carnet", Icons.AutoMirrored.Filled.MenuBook),
-        Tab("cellar", "Cave", Icons.Filled.Inventory2),
-        Tab("wish", "Wishlist", Icons.Filled.Favorite),
-        Tab("stats", "Stats", Icons.Filled.BarChart),
+        Tab("cave", "Cave", Icons.Filled.Inventory2),
+        Tab("parcours", "Parcours", Icons.Filled.Explore),
+        Tab("palais", "Palais", Icons.Filled.BarChart),
     )
     val onTab = tabs.any { it.route == route }
     var showAdd by remember { mutableStateOf(false) }
@@ -87,6 +89,9 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
     }
 
     fun openBeer(id: Long) = nav.navigate("beer/$id")
+    fun openStyle(index: Int) {
+        if (index >= 0) nav.navigate("style/$index")
+    }
 
     Scaffold(
         bottomBar = {
@@ -123,8 +128,8 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
         Box(Modifier.padding(pad).fillMaxSize()) {
             NavHost(nav, startDestination = "journal") {
                 composable("journal") { JournalScreen(vm, onBeer = ::openBeer) }
-                composable("cellar") {
-                    CellarScreen(
+                composable("cave") {
+                    CaveScreen(
                         vm,
                         onBeer = ::openBeer,
                         onOpen = { item ->
@@ -133,12 +138,6 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
                                 nav.navigate("edit/tasting")
                             }
                         },
-                    )
-                }
-                composable("wish") {
-                    WishScreen(
-                        vm,
-                        onBeer = ::openBeer,
                         onTasted = { w ->
                             scope.launch {
                                 vm.tastedWish(w)
@@ -147,7 +146,10 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
                         },
                     )
                 }
-                composable("stats") { StatsScreen(vm, onBeer = ::openBeer, onSettings = { nav.navigate("settings") }) }
+                composable("parcours") {
+                    ParcoursScreen(vm, onStyle = ::openStyle, onScan = { nav.navigate("scan") })
+                }
+                composable("palais") { StatsScreen(vm, onBeer = ::openBeer, onSettings = { nav.navigate("settings") }) }
                 composable(
                     "beer/{id}",
                     arguments = listOf(navArgument("id") { type = NavType.LongType }),
@@ -162,6 +164,8 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
                                 nav.navigate("edit/$mode")
                             }
                         },
+                        onStyle = ::openStyle,
+                        onSouvenir = { tid -> nav.navigate("souvenir/$tid") },
                     )
                 }
                 composable("scan") {
@@ -186,7 +190,31 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
                 }
                 composable("edit/{mode}") { entry ->
                     val mode = entry.arguments?.getString("mode") ?: "tasting"
-                    EditScreen(vm, mode, onClose = { nav.popBackStack() })
+                    EditScreen(
+                        vm, mode,
+                        onClose = { nav.popBackStack() },
+                        onSavedTasting = { tid ->
+                            nav.navigate("souvenir/$tid") { popUpTo("edit/{mode}") { inclusive = true } }
+                        },
+                    )
+                }
+                composable(
+                    "souvenir/{id}",
+                    arguments = listOf(navArgument("id") { type = NavType.LongType }),
+                ) { entry ->
+                    val id = entry.arguments?.getLong("id") ?: 0L
+                    SouvenirScreen(
+                        vm, id,
+                        onClose = { nav.popBackStack() },
+                        onBeer = { bid -> nav.navigate("beer/$bid") { popUpTo("souvenir/{id}") { inclusive = true } } },
+                        onStyle = ::openStyle,
+                    )
+                }
+                composable(
+                    "style/{index}",
+                    arguments = listOf(navArgument("index") { type = NavType.IntType }),
+                ) { entry ->
+                    StyleScreen(entry.arguments?.getInt("index") ?: 0, onBack = { nav.popBackStack() })
                 }
                 composable("settings") { SettingsScreen(vm, onBack = { nav.popBackStack() }) }
             }
@@ -197,11 +225,28 @@ fun ZythoApp(vm: ZythoViewModel = viewModel()) {
     }
 
     if (showAdd) {
+        val habitual = remember { vm.habitualBeers() }
         AlertDialog(
             onDismissRequest = { showAdd = false },
             title = { Text("Ajouter une bière") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (habitual.isNotEmpty()) {
+                        Text("Encore une ?", style = MaterialTheme.typography.labelLarge, color = Amber)
+                        habitual.forEach { b ->
+                            OutlinedButton(
+                                onClick = {
+                                    showAdd = false
+                                    scope.launch {
+                                        vm.prepareAgain(b.id)
+                                        nav.navigate("edit/tasting")
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("🍺 ${b.name}", maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                        }
+                        Text("Ou une autre :", style = MaterialTheme.typography.labelLarge, color = Amber)
+                    }
                     Button(
                         onClick = { showAdd = false; nav.navigate("scan") },
                         modifier = Modifier.fillMaxWidth(),

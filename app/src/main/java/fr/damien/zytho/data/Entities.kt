@@ -53,6 +53,13 @@ data class Tasting(
     val vintage: Int? = null,
     val format: String = "",
     val comment: String = "",
+    // Dégustation guidée (v2), tous facultatifs. Profils de 0 à 4.
+    val color: String? = null,
+    val sweetness: Int? = null,
+    val bitterness: Int? = null,
+    val body: Int? = null,
+    val fizz: Int? = null,
+    val finish: String? = null,
 )
 
 @Serializable

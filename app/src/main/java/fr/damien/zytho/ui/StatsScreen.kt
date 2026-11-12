@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import fr.damien.zytho.ZythoViewModel
+import fr.damien.zytho.data.Anselme
 import fr.damien.zytho.data.Beers
 
 @Composable
@@ -48,7 +49,7 @@ fun StatsScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onSettings: () -> Un
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-            Text("Stats", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            Text("Palais", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
             IconButton(onClick = onSettings) { Icon(Icons.Filled.Settings, contentDescription = "Réglages et export") }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
@@ -61,6 +62,14 @@ fun StatsScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onSettings: () -> Un
             StatTile("En cave", cellar.sumOf { it.quantity }.toString(), Modifier.weight(1f))
             StatTile("À racheter", beers.count { it.rebuy == "Oui" }.toString(), Modifier.weight(1f))
         }
+
+        SectionTitle("Ta carte du goût")
+        val points = tastePoints(beers, tastings)
+        val center = palateCenter(points)
+        TasteMap(points, center)
+        Spacer(Modifier.height(8.dp))
+        AnselmeBubble(Anselme.palateReading(center?.first ?: 0f, center?.second ?: 2f, points.size))
+        Hint("Chaque point est une dégustation : plus il est doré, mieux tu l'as notée. Le cercle clair, c'est ton palais.")
 
         SectionTitle("Top 5")
         if (top.isEmpty()) Text("Note quelques bières pour voir ton podium.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -104,12 +113,6 @@ fun StatsScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onSettings: () -> Un
                 }
             }
         }
-        Text(
-            "Radar d'arômes, timeline et carte des brasseries arrivent en V2.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 20.dp),
-        )
         Spacer(Modifier.height(90.dp))
     }
 }

@@ -24,7 +24,7 @@ import fr.damien.zytho.ZythoViewModel
 import fr.damien.zytho.data.WishItem
 
 @Composable
-fun WishScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onTasted: (WishItem) -> Unit) {
+fun WishScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onTasted: (WishItem) -> Unit, showTitle: Boolean = true) {
     val wishes by vm.wishes.collectAsState()
     val beers by vm.beers.collectAsState()
     val breweries by vm.breweries.collectAsState()
@@ -33,11 +33,13 @@ fun WishScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onTasted: (WishItem) 
     val items = wishes.filter { beersById.containsKey(it.beerId) }
 
     Column(Modifier.fillMaxSize()) {
-        Text(
-            "Wishlist",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-        )
+        if (showTitle) {
+            Text(
+                "Wishlist",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
+            )
+        }
         Text(
             if (items.isEmpty()) "Rien à goûter pour l'instant. En magasin, scanne et choisis « Wishlist »."
             else "${items.size} bière(s) à goûter",

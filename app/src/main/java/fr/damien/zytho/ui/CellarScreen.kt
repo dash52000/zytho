@@ -22,7 +22,7 @@ import fr.damien.zytho.data.CellarItem
 import java.time.LocalDate
 
 @Composable
-fun CellarScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onOpen: (CellarItem) -> Unit) {
+fun CellarScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onOpen: (CellarItem) -> Unit, showTitle: Boolean = true) {
     val cellar by vm.cellar.collectAsState()
     val beers by vm.beers.collectAsState()
     val breweries by vm.breweries.collectAsState()
@@ -37,11 +37,13 @@ fun CellarScreen(vm: ZythoViewModel, onBeer: (Long) -> Unit, onOpen: (CellarItem
     val urgent = items.filter { (it.drinkBefore ?: Int.MAX_VALUE) <= year }.sumOf { it.quantity }
 
     Column(Modifier.fillMaxSize()) {
-        Text(
-            "Cave",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-        )
+        if (showTitle) {
+            Text(
+                "Cave",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
+            )
+        }
         Text(
             if (total == 0) "Ta cave est vide. Scanne une bouteille et choisis « Ajouter en cave »."
             else "$total bouteille(s)" + if (urgent > 0) " · $urgent à boire cette année" else "",
